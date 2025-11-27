@@ -51,9 +51,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 // ただし、UIDが小さい方だけが接続を開始する（重複を防ぐため）
                 if (isConnected) {
                     participantsArray.forEach((participant) => {
-                        if (participant.id !== user.uid &&
+                        const shouldConnect = participant.id !== user.uid &&
                             !peersRef.current[participant.id] &&
-                            user.uid < participant.id) {
+                            user.uid < participant.id;
+
+                        console.log(`Participant check: ${participant.id}, myUID: ${user.uid}, shouldConnect: ${shouldConnect}`);
+
+                        if (shouldConnect) {
                             console.log('Auto-connecting to new participant:', participant.id);
                             connectToPeer(participant.id);
                         }
