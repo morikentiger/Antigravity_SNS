@@ -198,6 +198,20 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 muted: false,
             });
 
+            // 古いシグナルをクリーンアップ（自分宛てのシグナルを削除）
+            const signalsRef = ref(database, `rooms/${roomId}/signals`);
+            const signalsSnapshot = await onValue(signalsRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.entries(data).forEach(([key, signal]: [string, any]) => {
+                        // 自分が送信したシグナル、または自分宛てのシグナルを削除
+                        if (signal.from === user.uid || signal.to === user.uid) {
+                            remove(ref(database, `rooms/${roomId}/signals/${key}`));
+                        }
+                    });
+                }
+            }, { onlyOnce: true });
+
             // 既存の参加者全員に接続（新規参加者が接続を開始）
             const participantsSnapshot = await onValue(
                 ref(database, `rooms/${roomId}/participants`),
