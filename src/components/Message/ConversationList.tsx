@@ -6,6 +6,7 @@ import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
+import ProfileEditModal from '@/components/Profile/ProfileEditModal';
 import styles from './ConversationList.module.css';
 
 interface Conversation {
@@ -22,6 +23,7 @@ export default function ConversationList() {
     const { user } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [users, setUsers] = useState<any>({});
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -91,6 +93,24 @@ export default function ConversationList() {
     return (
         <div className={styles.container}>
             <h2>メッセージ</h2>
+
+            {/* プロフィール変更セクション */}
+            <div className="mb-4 p-4 bg-gray-800/50 rounded-lg flex items-center justify-between border border-gray-700">
+                <div className="flex items-center gap-3">
+                    <Avatar src={user?.photoURL || ''} alt={user?.displayName || 'User'} size="md" />
+                    <div>
+                        <p className="font-bold text-white">{user?.displayName || 'ゲスト'}</p>
+                        <p className="text-xs text-gray-400">プロフィールを編集</p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
+                >
+                    変更
+                </button>
+            </div>
+
             {conversations.length === 0 ? (
                 <div className={styles.empty}>
                     <p>まだ会話がありません</p>
@@ -123,6 +143,10 @@ export default function ConversationList() {
                     ))}
                 </div>
             )}
+            <ProfileEditModal
+                isOpen={isProfileModalOpen}
+                onClose={() => setIsProfileModalOpen(false)}
+            />
         </div>
     );
 }
