@@ -53,6 +53,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user]);
 
+
     // WebRTC シグナリング
     useEffect(() => {
         if (!user || !isConnected) return;
@@ -63,6 +64,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
             const signal = snapshot.val();
             if (!signal || signal.from === user.uid) return;
 
+            // このシグナルが自分宛てかチェック
+            if (signal.to && signal.to !== user.uid) return;
+
             try {
                 // 既存のピア接続がある場合
                 if (peersRef.current[signal.from]) {
@@ -70,7 +74,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     return;
                 }
 
-                // 新しいピア接続を作成
+                // 新しいピア接続を作成（受信側）
                 if (streamRef.current) {
                     const peer = createPeer(false, streamRef.current);
 
@@ -103,6 +107,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         return () => unsubscribe();
     }, [roomId, user, isConnected]);
+
 
     const playAudio = (userId: string, stream: MediaStream) => {
         // 既存のオーディオ要素があれば削除
