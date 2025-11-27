@@ -97,7 +97,11 @@ export default function ThreadDetailPage() {
                 timestamp: serverTimestamp(),
             });
 
-            // スレッドのメタデータを更新
+            // 実際の返信数を数えてスレッドのメタデータを更新
+            const repliesSnapshot = await get(repliesRef);
+            const repliesData = repliesSnapshot.val();
+            const actualReplyCount = repliesData ? Object.keys(repliesData).length : 0;
+
             const threadRef = ref(database, `threads/${threadId}`);
             const threadSnapshot = await get(threadRef);
             const threadData = threadSnapshot.val();
@@ -105,7 +109,7 @@ export default function ThreadDetailPage() {
             if (threadData) {
                 await set(threadRef, {
                     ...threadData,
-                    replyCount: (threadData.replyCount || 0) + 1,
+                    replyCount: actualReplyCount,
                     lastReplyTime: Date.now(),
                 });
             }
