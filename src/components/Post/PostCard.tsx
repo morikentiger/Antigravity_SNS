@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ref, set, get } from 'firebase/database';
+import { ref, set, get, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Avatar from '@/components/common/Avatar';
@@ -102,6 +102,27 @@ export default function PostCard({ post }: PostCardProps) {
                     </svg>
                     <span>返信</span>
                 </button>
+                {user && user.uid === post.userId && (
+                    <button
+                        onClick={async () => {
+                            if (window.confirm('本当にこの投稿を削除しますか？')) {
+                                try {
+                                    await remove(ref(database, `posts/${post.id}`));
+                                } catch (error) {
+                                    console.error('Error deleting post:', error);
+                                    alert('削除に失敗しました');
+                                }
+                            }
+                        }}
+                        className="flex items-center gap-1 text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                        aria-label="削除"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                )}
             </div>
         </article>
     );

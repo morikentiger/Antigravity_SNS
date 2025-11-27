@@ -97,7 +97,7 @@ export default function ProfilePage() {
                 <h1 className="text-3xl font-bold mb-8">プロフィール設定</h1>
 
                 <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-                    <div className="flex items-center gap-6 mb-8">
+                    <div className="flex flex-col md:flex-row items-center gap-6 mb-8 text-center md:text-left">
                         <div className="relative">
                             <Avatar src={photoURL || user.photoURL || ''} alt={user.displayName || 'User'} size="lg" />
                             <button
@@ -116,9 +116,9 @@ export default function ProfilePage() {
                                 className="hidden"
                             />
                         </div>
-                        <div>
-                            <p className="text-sm text-gray-400">メールアドレス</p>
-                            <p className="text-lg">{user.email}</p>
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-400 mb-1">メールアドレス</p>
+                            <p className="text-lg font-medium break-all">{user.email}</p>
                         </div>
                     </div>
 
