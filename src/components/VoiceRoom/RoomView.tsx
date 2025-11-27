@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { ref, onValue, set, remove, get } from 'firebase/database';
+import { ref, onValue, set, remove, push, onChildAdded } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { createPeer, getUserMedia, stopMediaStream } from '@/lib/webrtc';
@@ -28,6 +28,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [isConnected, setIsConnected] = useState(false);
     const streamRef = useRef<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
+    const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
     useEffect(() => {
         if (!user) return;
@@ -52,6 +53,76 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user]);
 
+    // WebRTC シグナリング
+    useEffect(() => {
+        if (!user || !isConnected) return;
+
+        const signalsRef = ref(database, `rooms/${roomId}/signals`);
+
+        const unsubscribe = onChildAdded(signalsRef, async (snapshot) => {
+            const signal = snapshot.val();
+            if (!signal || signal.from === user.uid) return;
+
+            try {
+                // 既存のピア接続がある場合
+                if (peersRef.current[signal.from]) {
+                    peersRef.current[signal.from].signal(signal.signal);
+                    return;
+                }
+
+                // 新しいピア接続を作成
+                if (streamRef.current) {
+                    const peer = createPeer(false, streamRef.current);
+
+                    peer.on('signal', (signalData) => {
+                        const responseRef = push(ref(database, `rooms/${roomId}/signals`));
+                        set(responseRef, {
+                            from: user.uid,
+                            to: signal.from,
+                            signal: signalData,
+                            timestamp: Date.now(),
+                        });
+                    });
+
+                    peer.on('stream', (remoteStream) => {
+                        console.log('Received stream from:', signal.from);
+                        playAudio(signal.from, remoteStream);
+                    });
+
+                    peer.on('error', (err) => {
+                        console.error('Peer error:', err);
+                    });
+
+                    peer.signal(signal.signal);
+                    peersRef.current[signal.from] = peer;
+                }
+            } catch (error) {
+                console.error('Error handling signal:', error);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [roomId, user, isConnected]);
+
+    const playAudio = (userId: string, stream: MediaStream) => {
+        // 既存のオーディオ要素があれば削除
+        if (audioElementsRef.current[userId]) {
+            audioElementsRef.current[userId].srcObject = null;
+            audioElementsRef.current[userId].remove();
+        }
+
+        // 新しいオーディオ要素を作成
+        const audio = document.createElement('audio');
+        audio.srcObject = stream;
+        audio.autoplay = true;
+        audio.volume = 1.0;
+        audioElementsRef.current[userId] = audio;
+
+        audio.play().catch(err => {
+            console.error('Error playing audio:', err);
+        });
+    };
+
     const joinRoom = async () => {
         if (!user) return;
 
@@ -60,6 +131,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
             streamRef.current = stream;
             setIsConnected(true);
 
+            // 自分の参加情報を登録
             const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
             await set(userRef, {
                 name: user.displayName || 'Anonymous',
@@ -67,12 +139,52 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 muted: false,
             });
 
-            // In a production app, you would set up WebRTC signaling here
-            // For simplicity, this demo shows the UI without full P2P implementation
+            // 既存の参加者に接続
+            const participantsSnapshot = await onValue(
+                ref(database, `rooms/${roomId}/participants`),
+                (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        Object.keys(data).forEach((participantId) => {
+                            if (participantId !== user.uid && !peersRef.current[participantId]) {
+                                connectToPeer(participantId);
+                            }
+                        });
+                    }
+                },
+                { onlyOnce: true }
+            );
         } catch (error) {
             console.error('Error joining room:', error);
             alert('マイクへのアクセスを許可してください');
         }
+    };
+
+    const connectToPeer = (peerId: string) => {
+        if (!streamRef.current || !user) return;
+
+        const peer = createPeer(true, streamRef.current);
+
+        peer.on('signal', (signal) => {
+            const signalRef = push(ref(database, `rooms/${roomId}/signals`));
+            set(signalRef, {
+                from: user.uid,
+                to: peerId,
+                signal: signal,
+                timestamp: Date.now(),
+            });
+        });
+
+        peer.on('stream', (remoteStream) => {
+            console.log('Received stream from:', peerId);
+            playAudio(peerId, remoteStream);
+        });
+
+        peer.on('error', (err) => {
+            console.error('Peer error:', err);
+        });
+
+        peersRef.current[peerId] = peer;
     };
 
     const leaveRoom = async () => {
@@ -83,10 +195,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
             streamRef.current = null;
         }
 
+        // すべてのピア接続を破棄
         Object.values(peersRef.current).forEach((peer) => {
             peer.destroy();
         });
         peersRef.current = {};
+
+        // すべてのオーディオ要素を削除
+        Object.values(audioElementsRef.current).forEach((audio) => {
+            audio.srcObject = null;
+            audio.remove();
+        });
+        audioElementsRef.current = {};
 
         const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
         await remove(userRef);
@@ -115,6 +235,10 @@ export default function RoomView({ roomId }: RoomViewProps) {
             }
             Object.values(peersRef.current).forEach((peer) => {
                 peer.destroy();
+            });
+            Object.values(audioElementsRef.current).forEach((audio) => {
+                audio.srcObject = null;
+                audio.remove();
             });
         };
     }, []);
