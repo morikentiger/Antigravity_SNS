@@ -48,9 +48,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 setParticipants(participantsArray);
 
                 // 接続済みの場合、新しい参加者に自動接続
+                // ただし、UIDが小さい方だけが接続を開始する（重複を防ぐため）
                 if (isConnected) {
                     participantsArray.forEach((participant) => {
-                        if (participant.id !== user.uid && !peersRef.current[participant.id]) {
+                        if (participant.id !== user.uid &&
+                            !peersRef.current[participant.id] &&
+                            user.uid < participant.id) {
                             console.log('Auto-connecting to new participant:', participant.id);
                             connectToPeer(participant.id);
                         }
@@ -63,6 +66,40 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         return () => unsubscribe();
     }, [roomId, user, isConnected]);
+
+    const connectToPeer = useCallback((peerId: string) => {
+        if (!streamRef.current || !user) return;
+
+        // 既に接続済みの場合はスキップ
+        if (peersRef.current[peerId]) {
+            console.log('Already connected to:', peerId);
+            return;
+        }
+
+        console.log('Connecting to peer:', peerId);
+        const peer = createPeer(true, streamRef.current);
+
+        peer.on('signal', (signal) => {
+            const signalRef = push(ref(database, `rooms/${roomId}/signals`));
+            set(signalRef, {
+                from: user.uid,
+                to: peerId,
+                signal: signal,
+                timestamp: Date.now(),
+            });
+        });
+
+        peer.on('stream', (remoteStream) => {
+            console.log('Received stream from:', peerId);
+            playAudio(peerId, remoteStream);
+        });
+
+        peer.on('error', (err) => {
+            console.error('Peer error:', err);
+        });
+
+        peersRef.current[peerId] = peer;
+    }, [user, roomId, playAudio]);
 
 
 
@@ -158,14 +195,16 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 muted: false,
             });
 
-            // 既存の参加者に接続
+            // 既存の参加者に接続（UIDが小さい方だけが接続を開始）
             const participantsSnapshot = await onValue(
                 ref(database, `rooms/${roomId}/participants`),
                 (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         Object.keys(data).forEach((participantId) => {
-                            if (participantId !== user.uid && !peersRef.current[participantId]) {
+                            if (participantId !== user.uid &&
+                                !peersRef.current[participantId] &&
+                                user.uid < participantId) {
                                 connectToPeer(participantId);
                             }
                         });
@@ -178,42 +217,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
             alert('マイクへのアクセスを許可してください');
         }
     };
-
-
-    const connectToPeer = useCallback((peerId: string) => {
-        if (!streamRef.current || !user) return;
-
-        // 既に接続済みの場合はスキップ
-        if (peersRef.current[peerId]) {
-            console.log('Already connected to:', peerId);
-            return;
-        }
-
-        console.log('Connecting to peer:', peerId);
-        const peer = createPeer(true, streamRef.current);
-
-        peer.on('signal', (signal) => {
-            const signalRef = push(ref(database, `rooms/${roomId}/signals`));
-            set(signalRef, {
-                from: user.uid,
-                to: peerId,
-                signal: signal,
-                timestamp: Date.now(),
-            });
-        });
-
-        peer.on('stream', (remoteStream) => {
-            console.log('Received stream from:', peerId);
-            playAudio(peerId, remoteStream);
-        });
-
-        peer.on('error', (err) => {
-            console.error('Peer error:', err);
-        });
-
-        peersRef.current[peerId] = peer;
-    }, [user, roomId, playAudio]);
-
 
 
     const leaveRoom = async () => {
