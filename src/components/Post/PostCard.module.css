@@ -45,6 +45,7 @@
     line-height: 1.6;
     color: var(--color-text-primary);
     word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .actions {

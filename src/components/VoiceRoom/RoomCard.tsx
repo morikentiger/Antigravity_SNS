@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { ref, remove } from 'firebase/database';
+import { database } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import styles from './RoomCard.module.css';
 
 interface Room {
@@ -19,9 +22,25 @@ interface RoomCardProps {
 
 export default function RoomCard({ room }: RoomCardProps) {
     const router = useRouter();
+    const { user } = useAuth();
 
     const handleJoin = () => {
         router.push(`/rooms/${room.id}`);
+    };
+
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.confirm('本当にこのルームを解散（削除）しますか？')) {
+            return;
+        }
+
+        try {
+            await remove(ref(database, `rooms/${room.id}`));
+            // 削除後は自動的にリストから消える（onValueで監視しているため）
+        } catch (error) {
+            console.error('Error deleting room:', error);
+            alert('ルームの削除に失敗しました');
+        }
     };
 
     const isFull = room.participants >= room.maxParticipants;
@@ -40,13 +59,23 @@ export default function RoomCard({ room }: RoomCardProps) {
                             {room.participants}/{room.maxParticipants}
                         </span>
                     </div>
-                    <button
-                        onClick={handleJoin}
-                        disabled={isFull}
-                        className={styles.joinButton}
-                    >
-                        {isFull ? '満室' : '参加'}
-                    </button>
+                    <div className="flex gap-2">
+                        {user && user.uid === room.createdBy && (
+                            <button
+                                onClick={handleDelete}
+                                className="px-3 py-1 bg-red-900/50 text-red-200 rounded-md text-sm hover:bg-red-900 transition-colors"
+                            >
+                                解散
+                            </button>
+                        )}
+                        <button
+                            onClick={handleJoin}
+                            disabled={isFull}
+                            className={styles.joinButton}
+                        >
+                            {isFull ? '満室' : '参加'}
+                        </button>
+                    </div>
                 </div>
             </div>
             <div className={styles.waveform}>
