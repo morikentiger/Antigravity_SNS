@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ref, set, get, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
+import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
 import styles from './PostCard.module.css';
 
@@ -25,12 +26,18 @@ interface PostCardProps {
 
 export default function PostCard({ post }: PostCardProps) {
     const { user } = useAuth();
+    const router = useRouter();
     const [isLiked, setIsLiked] = useState(
         user ? post.likedBy?.[user.uid] || false : false
     );
     const [likeCount, setLikeCount] = useState(post.likes || 0);
 
-    const handleLike = async () => {
+    const handleCardClick = () => {
+        router.push(`/threads/${post.id}`);
+    };
+
+    const handleLike = async (e: React.MouseEvent) => {
+        e.stopPropagation();
         if (!user) return;
 
         const newLikedState = !isLiked;
@@ -77,7 +84,7 @@ export default function PostCard({ post }: PostCardProps) {
     };
 
     return (
-        <article className={styles.card}>
+        <article className={styles.card} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
             <div className={styles.header}>
                 <Avatar src={post.userAvatar} alt={post.userName} size="md" />
                 <div className={styles.userInfo}>
@@ -106,7 +113,8 @@ export default function PostCard({ post }: PostCardProps) {
                 </button>
                 {user && user.uid === post.userId && (
                     <button
-                        onClick={async () => {
+                        onClick={async (e) => {
+                            e.stopPropagation();
                             if (window.confirm('本当にこの投稿を削除しますか？')) {
                                 try {
                                     await remove(ref(database, `threads/${post.id}`));
