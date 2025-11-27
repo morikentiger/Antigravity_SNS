@@ -1,0 +1,105 @@
+.card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    transition: all var(--transition-base);
+    animation: fadeIn 0.5s ease;
+}
+
+.card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.userInfo {
+    flex: 1;
+}
+
+.userName {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.timestamp {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.content {
+    margin: 0 0 var(--space-md) 0;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    word-wrap: break-word;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-lg);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--glass-border);
+}
+
+.likeButton,
+.commentButton {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all var(--transition-base);
+}
+
+.likeButton:hover,
+.commentButton:hover {
+    background: var(--glass-bg);
+    color: var(--color-text-primary);
+}
+
+.likeButton svg {
+    transition: all var(--transition-base);
+}
+
+.likeButton:hover svg {
+    transform: scale(1.1);
+}
+
+.liked {
+    color: var(--color-accent);
+}
+
+.liked svg {
+    animation: heartbeat 0.3s ease;
+}
+
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}

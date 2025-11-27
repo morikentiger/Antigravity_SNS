@@ -1,0 +1,109 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-dropdown);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-lg);
+}
+
+.logo h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+.logo:hover h1 {
+    transform: scale(1.05);
+}
+
+.navItems {
+    display: flex;
+    gap: var(--space-sm);
+    flex: 1;
+    justify-content: center;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.navItem:hover {
+    background: var(--glass-bg);
+    color: var(--color-text-primary);
+}
+
+.navItem.active {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.icon {
+    font-size: 1.25rem;
+}
+
+.label {
+    font-size: 0.875rem;
+}
+
+.auth {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .navItems {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--color-bg-secondary);
+        border-top: 1px solid var(--glass-border);
+        padding: var(--space-sm);
+        justify-content: space-around;
+        z-index: var(--z-dropdown);
+    }
+
+    .navItem {
+        flex-direction: column;
+        gap: 2px;
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .label {
+        font-size: 0.75rem;
+    }
+
+    .icon {
+        font-size: 1.5rem;
+    }
+}

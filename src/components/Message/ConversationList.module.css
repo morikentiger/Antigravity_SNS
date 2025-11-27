@@ -1,0 +1,108 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.container h2 {
+    margin: 0;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.item {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+.item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-primary);
+    transform: translateX(4px);
+}
+
+.item.unread {
+    border-color: var(--color-primary);
+}
+
+.info {
+    flex: 1;
+    min-width: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.lastMessage {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unreadDot {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    width: 10px;
+    height: 10px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.empty {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--color-text-secondary);
+}
+
+.empty p {
+    margin: 0;
+}
+
+.emptySubtext {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin-top: var(--space-sm) !important;
+}
