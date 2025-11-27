@@ -17,6 +17,7 @@ interface Post {
     likes: number;
     likedBy: { [key: string]: boolean };
     replyCount?: number;
+    lastReplyTime?: number;
 }
 
 export default function PostFeed() {
@@ -44,8 +45,14 @@ export default function PostFeed() {
                         likes: post.likes || 0,
                         likedBy: post.likedBy || {},
                         replyCount: post.replyCount || 0,
+                        lastReplyTime: post.lastReplyTime,
                     }))
-                    .sort((a, b) => b.timestamp - a.timestamp);
+                    .sort((a, b) => {
+                        // 最終返信時刻でソート（返信があればそれを、なければ作成時刻を使う）
+                        const aTime = a.lastReplyTime || a.timestamp;
+                        const bTime = b.lastReplyTime || b.timestamp;
+                        return bTime - aTime;
+                    });
                 setPosts(postsArray);
             } else {
                 setPosts([]);

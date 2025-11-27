@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ref, onValue, push, serverTimestamp } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Avatar from '@/components/common/Avatar';
@@ -96,6 +96,20 @@ export default function ThreadDetailPage() {
                 userAvatar: user.photoURL || '',
                 timestamp: serverTimestamp(),
             });
+
+            // スレッドのメタデータを更新
+            const threadRef = ref(database, `threads/${threadId}`);
+            const threadSnapshot = await get(threadRef);
+            const threadData = threadSnapshot.val();
+
+            if (threadData) {
+                await set(threadRef, {
+                    ...threadData,
+                    replyCount: (threadData.replyCount || 0) + 1,
+                    lastReplyTime: Date.now(),
+                });
+            }
+
             setReplyContent('');
         } catch (error) {
             console.error('Error posting reply:', error);
