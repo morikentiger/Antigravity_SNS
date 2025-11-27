@@ -44,7 +44,9 @@
     margin: 0 0 var(--space-md) 0;
     line-height: 1.6;
     color: var(--color-text-primary);
+    overflow-wrap: break-word;
     word-wrap: break-word;
+    word-break: break-word;
     white-space: pre-wrap;
 }
 

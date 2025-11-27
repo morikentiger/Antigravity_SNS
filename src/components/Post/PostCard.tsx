@@ -84,7 +84,7 @@ export default function PostCard({ post }: PostCardProps) {
                     <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
                 </div>
             </div>
-            <p className={styles.content}>{post.content}</p>
+            <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{post.content}</p>
             <div className={styles.actions}>
                 <button
                     onClick={handleLike}
