@@ -31,6 +31,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
 
+    // 参加者リストの監視（表示用のみ。自動接続は行わない）
     useEffect(() => {
         if (!user) return;
 
@@ -46,30 +47,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     })
                 );
                 setParticipants(participantsArray);
-
-                // 接続済みの場合、新しい参加者に自動接続
-                // ただし、UIDが小さい方だけが接続を開始する（重複を防ぐため）
-                if (isConnected) {
-                    participantsArray.forEach((participant) => {
-                        const shouldConnect = participant.id !== user.uid &&
-                            !peersRef.current[participant.id] &&
-                            user.uid < participant.id;
-
-                        console.log(`Participant check: ${participant.id}, myUID: ${user.uid}, shouldConnect: ${shouldConnect}`);
-
-                        if (shouldConnect) {
-                            console.log('Auto-connecting to new participant:', participant.id);
-                            connectToPeer(participant.id);
-                        }
-                    });
-                }
             } else {
                 setParticipants([]);
             }
         });
 
         return () => unsubscribe();
-    }, [roomId, user, isConnected]);
+    }, [roomId, user]);
 
     const playAudio = useCallback((userId: string, stream: MediaStream) => {
         // 既存のオーディオ要素があれば、ストリームだけ更新
@@ -93,19 +77,28 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
     }, []);
 
-    const connectToPeer = useCallback((peerId: string) => {
+    // ピア接続の管理（発信・着信共通）
+    const connectToPeer = useCallback((peerId: string, initiator: boolean = true, incomingSignal?: any) => {
         if (!streamRef.current || !user) return;
 
-        // 既に接続済みの場合はスキップ
-        if (peersRef.current[peerId]) {
+        // 既に接続済みの場合はスキップ（ただし、シグナル処理の場合は除く）
+        if (peersRef.current[peerId] && !incomingSignal) {
             console.log('Already connected to:', peerId);
             return;
         }
 
-        console.log('Connecting to peer:', peerId);
-        const peer = createPeer(true, streamRef.current);
+        // 既にピアがある状態でシグナルが来た場合は、そのピアにシグナルを渡す
+        if (peersRef.current[peerId] && incomingSignal) {
+            console.log('Passing signal to existing peer:', peerId);
+            peersRef.current[peerId].signal(incomingSignal);
+            return;
+        }
+
+        console.log(`Creating peer connection to ${peerId}. Initiator: ${initiator}`);
+        const peer = createPeer(initiator, streamRef.current);
 
         peer.on('signal', (signal) => {
+            // シグナル（Offer/Answer/ICE）が発生したら相手に送信
             const signalRef = push(ref(database, `rooms/${roomId}/signals`));
             set(signalRef, {
                 from: user.uid,
@@ -121,14 +114,28 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         peer.on('error', (err) => {
-            console.error('Peer error:', err);
+            console.error(`Peer error with ${peerId}:`, err);
+        });
+
+        peer.on('close', () => {
+            console.log(`Connection with ${peerId} closed`);
+            delete peersRef.current[peerId];
+            if (audioElementsRef.current[peerId]) {
+                audioElementsRef.current[peerId].remove();
+                delete audioElementsRef.current[peerId];
+            }
         });
 
         peersRef.current[peerId] = peer;
+
+        // 着信（Responder）の場合、受け取ったOfferシグナルを適用
+        if (!initiator && incomingSignal) {
+            peer.signal(incomingSignal);
+        }
     }, [user, roomId, playAudio]);
 
 
-    // WebRTC シグナリング
+    // WebRTC シグナリング（受信処理）
     useEffect(() => {
         if (!user || !isConnected) return;
 
@@ -138,41 +145,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
             const signal = snapshot.val();
             if (!signal || signal.from === user.uid) return;
 
-            // このシグナルが自分宛てかチェック（toがない場合は全員宛て）
+            // このシグナルが自分宛てかチェック（toがない場合は全員宛てだが、基本はtoがあるべき）
             if (signal.to && signal.to !== user.uid) return;
 
             try {
-                // 既存のピア接続がある場合はシグナルを送る
+                // 既存のピアがある、またはOfferを受け取った場合に処理
                 if (peersRef.current[signal.from]) {
+                    // 既存ピアにシグナルを適用
                     peersRef.current[signal.from].signal(signal.signal);
-                    return;
-                }
-
-                // 新しいピア接続を作成（受信側）
-                if (streamRef.current) {
-                    const peer = createPeer(false, streamRef.current);
-
-                    peer.on('signal', (signalData) => {
-                        const responseRef = push(ref(database, `rooms/${roomId}/signals`));
-                        set(responseRef, {
-                            from: user.uid,
-                            to: signal.from,
-                            signal: signalData,
-                            timestamp: Date.now(),
-                        });
-                    });
-
-                    peer.on('stream', (remoteStream) => {
-                        console.log('Received stream from:', signal.from);
-                        playAudio(signal.from, remoteStream);
-                    });
-
-                    peer.on('error', (err) => {
-                        console.error('Peer error:', err);
-                    });
-
-                    peer.signal(signal.signal);
-                    peersRef.current[signal.from] = peer;
+                } else if (signal.signal.type === 'offer') {
+                    // 新しいOfferを受け取ったら、Responderとして接続を開始
+                    console.log('Received offer from:', signal.from);
+                    connectToPeer(signal.from, false, signal.signal);
                 }
             } catch (error) {
                 console.error('Error handling signal:', error);
@@ -180,7 +164,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         return () => unsubscribe();
-    }, [roomId, user, isConnected]);
+    }, [roomId, user, isConnected, connectToPeer]);
 
     const joinRoom = async () => {
         if (!user) return;
@@ -198,13 +182,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 muted: false,
             });
 
-            // 古いシグナルをクリーンアップ（自分宛てのシグナルを削除）
+            // 古いシグナルをクリーンアップ
             const signalsRef = ref(database, `rooms/${roomId}/signals`);
             const signalsSnapshot = await onValue(signalsRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     Object.entries(data).forEach(([key, signal]: [string, any]) => {
-                        // 自分が送信したシグナル、または自分宛てのシグナルを削除
                         if (signal.from === user.uid || signal.to === user.uid) {
                             remove(ref(database, `rooms/${roomId}/signals/${key}`));
                         }
@@ -212,22 +195,23 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 }
             }, { onlyOnce: true });
 
-            // 既存の参加者全員に接続（新規参加者が接続を開始）
+            // 既存の参加者全員に接続（新規参加者がInitiatorとなる）
             const participantsSnapshot = await onValue(
                 ref(database, `rooms/${roomId}/participants`),
                 (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         Object.keys(data).forEach((participantId) => {
-                            if (participantId !== user.uid && !peersRef.current[participantId]) {
-                                console.log('Joining: connecting to existing participant:', participantId);
-                                connectToPeer(participantId);
+                            if (participantId !== user.uid) {
+                                console.log('Joining: initiating connection to:', participantId);
+                                connectToPeer(participantId, true);
                             }
                         });
                     }
                 },
                 { onlyOnce: true }
             );
+
         } catch (error) {
             console.error('Error joining room:', error);
             alert('マイクへのアクセスを許可してください');
