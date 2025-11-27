@@ -118,29 +118,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         return () => unsubscribe();
-    }, [roomId, user, isConnected]);
-
-
-
-
-    const playAudio = (userId: string, stream: MediaStream) => {
-        // 既存のオーディオ要素があれば削除
-        if (audioElementsRef.current[userId]) {
-            audioElementsRef.current[userId].srcObject = null;
-            audioElementsRef.current[userId].remove();
-        }
-
-        // 新しいオーディオ要素を作成
-        const audio = document.createElement('audio');
-        audio.srcObject = stream;
-        audio.autoplay = true;
-        audio.volume = 1.0;
-        audioElementsRef.current[userId] = audio;
-
-        audio.play().catch(err => {
-            console.error('Error playing audio:', err);
-        });
-    };
+    }, [roomId, user, isConnected, playAudio]);
 
     const joinRoom = async () => {
         if (!user) return;
@@ -183,6 +161,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const connectToPeer = useCallback((peerId: string) => {
         if (!streamRef.current || !user) return;
 
+        // 既に接続済みの場合はスキップ
+        if (peersRef.current[peerId]) {
+            console.log('Already connected to:', peerId);
+            return;
+        }
+
+        console.log('Connecting to peer:', peerId);
         const peer = createPeer(true, streamRef.current);
 
         peer.on('signal', (signal) => {
@@ -205,7 +190,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         peersRef.current[peerId] = peer;
-    }, [user, roomId]);
+    }, [user, roomId, playAudio]);
+
 
 
     const leaveRoom = async () => {
