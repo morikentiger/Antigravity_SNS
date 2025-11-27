@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ref, onValue, set, remove, push, onChildAdded } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
@@ -30,6 +30,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
+
     useEffect(() => {
         if (!user) return;
 
@@ -45,13 +46,24 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     })
                 );
                 setParticipants(participantsArray);
+
+                // 接続済みの場合、新しい参加者に自動接続
+                if (isConnected) {
+                    participantsArray.forEach((participant) => {
+                        if (participant.id !== user.uid && !peersRef.current[participant.id]) {
+                            console.log('Auto-connecting to new participant:', participant.id);
+                            connectToPeer(participant.id);
+                        }
+                    });
+                }
             } else {
                 setParticipants([]);
             }
         });
 
         return () => unsubscribe();
-    }, [roomId, user]);
+    }, [roomId, user, isConnected]);
+
 
 
     // WebRTC シグナリング
@@ -167,7 +179,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
         }
     };
 
-    const connectToPeer = (peerId: string) => {
+
+    const connectToPeer = useCallback((peerId: string) => {
         if (!streamRef.current || !user) return;
 
         const peer = createPeer(true, streamRef.current);
@@ -192,7 +205,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         peersRef.current[peerId] = peer;
-    };
+    }, [user, roomId]);
+
 
     const leaveRoom = async () => {
         if (!user) return;
