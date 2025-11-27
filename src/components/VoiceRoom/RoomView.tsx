@@ -198,16 +198,15 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 muted: false,
             });
 
-            // 既存の参加者に接続（UIDが小さい方だけが接続を開始）
+            // 既存の参加者全員に接続（新規参加者が接続を開始）
             const participantsSnapshot = await onValue(
                 ref(database, `rooms/${roomId}/participants`),
                 (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         Object.keys(data).forEach((participantId) => {
-                            if (participantId !== user.uid &&
-                                !peersRef.current[participantId] &&
-                                user.uid < participantId) {
+                            if (participantId !== user.uid && !peersRef.current[participantId]) {
+                                console.log('Joining: connecting to existing participant:', participantId);
                                 connectToPeer(participantId);
                             }
                         });
