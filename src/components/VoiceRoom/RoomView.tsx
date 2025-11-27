@@ -67,6 +67,28 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user, isConnected]);
 
+    const playAudio = useCallback((userId: string, stream: MediaStream) => {
+        // 既存のオーディオ要素があれば、ストリームだけ更新
+        if (audioElementsRef.current[userId]) {
+            const existingAudio = audioElementsRef.current[userId];
+            if (existingAudio.srcObject !== stream) {
+                existingAudio.srcObject = stream;
+            }
+            return;
+        }
+
+        // 新しいオーディオ要素を作成
+        const audio = document.createElement('audio');
+        audio.srcObject = stream;
+        audio.autoplay = true;
+        audio.volume = 1.0;
+        audioElementsRef.current[userId] = audio;
+
+        audio.play().catch(err => {
+            console.error('Error playing audio:', err);
+        });
+    }, []);
+
     const connectToPeer = useCallback((peerId: string) => {
         if (!streamRef.current || !user) return;
 
@@ -100,7 +122,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         peersRef.current[peerId] = peer;
     }, [user, roomId, playAudio]);
-
 
 
     // WebRTC シグナリング
