@@ -9,6 +9,7 @@ import styles from './PostCard.module.css';
 
 interface Post {
     id: string;
+    title: string;
     content: string;
     userId: string;
     userName: string;
@@ -39,7 +40,7 @@ export default function PostCard({ post }: PostCardProps) {
         setLikeCount(newLikeCount);
 
         try {
-            const postRef = ref(database, `posts/${post.id}`);
+            const postRef = ref(database, `threads/${post.id}`);
             const snapshot = await get(postRef);
             const currentPost = snapshot.val();
 
@@ -84,6 +85,7 @@ export default function PostCard({ post }: PostCardProps) {
                     <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
                 </div>
             </div>
+            {post.title && <h4 className={styles.title}>{post.title}</h4>}
             <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{post.content}</p>
             <div className={styles.actions}>
                 <button
@@ -107,7 +109,7 @@ export default function PostCard({ post }: PostCardProps) {
                         onClick={async () => {
                             if (window.confirm('本当にこの投稿を削除しますか？')) {
                                 try {
-                                    await remove(ref(database, `posts/${post.id}`));
+                                    await remove(ref(database, `threads/${post.id}`));
                                 } catch (error) {
                                     console.error('Error deleting post:', error);
                                     alert('削除に失敗しました');

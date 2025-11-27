@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ref, onValue, query, orderByChild, limitToLast } from 'firebase/database';
+import { ref, onValue, query, orderByChild } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import PostCard from './PostCard';
 import styles from './PostFeed.module.css';
 
 interface Post {
     id: string;
+    title: string;
     content: string;
     userId: string;
     userName: string;
@@ -15,6 +16,7 @@ interface Post {
     timestamp: number;
     likes: number;
     likedBy: { [key: string]: boolean };
+    replyCount?: number;
 }
 
 export default function PostFeed() {
@@ -22,17 +24,28 @@ export default function PostFeed() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const postsRef = ref(database, 'posts');
-        const postsQuery = query(postsRef, orderByChild('timestamp'), limitToLast(50));
+        const threadsRef = query(
+            ref(database, 'threads'),
+            orderByChild('timestamp')
+        );
 
-        const unsubscribe = onValue(postsQuery, (snapshot) => {
+        const unsubscribe = onValue(threadsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const postsArray: Post[] = Object.entries(data).map(([id, post]: [string, any]) => ({
-                    id,
-                    ...post,
-                }));
-                postsArray.sort((a, b) => b.timestamp - a.timestamp);
+                const postsArray: Post[] = Object.entries(data)
+                    .map(([id, post]: [string, any]) => ({
+                        id,
+                        title: post.title || '',
+                        content: post.content,
+                        userId: post.userId,
+                        userName: post.userName,
+                        userAvatar: post.userAvatar,
+                        timestamp: post.timestamp,
+                        likes: post.likes || 0,
+                        likedBy: post.likedBy || {},
+                        replyCount: post.replyCount || 0,
+                    }))
+                    .sort((a, b) => b.timestamp - a.timestamp);
                 setPosts(postsArray);
             } else {
                 setPosts([]);
@@ -44,21 +57,11 @@ export default function PostFeed() {
     }, []);
 
     if (loading) {
-        return (
-            <div className={styles.loading}>
-                <div className={styles.spinner}></div>
-                <p>読み込み中...</p>
-            </div>
-        );
+        return <div className={styles.loading}>読み込み中...</div>;
     }
 
     if (posts.length === 0) {
-        return (
-            <div className={styles.empty}>
-                <p>まだ投稿がありません</p>
-                <p className={styles.emptySubtext}>最初の投稿をしてみましょう！</p>
-            </div>
-        );
+        return <div className={styles.empty}>まだスレッドがありません</div>;
     }
 
     return (

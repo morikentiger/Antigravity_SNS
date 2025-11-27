@@ -40,6 +40,14 @@
     color: var(--color-text-muted);
 }
 
+.title {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+}
+
 .content {
     margin: 0 0 var(--space-md) 0;
     line-height: 1.6;

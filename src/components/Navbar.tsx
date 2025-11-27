@@ -15,7 +15,7 @@ export default function Navbar() {
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     const navItems = [
-        { href: '/', label: 'フィード', icon: '🏠' },
+        { href: '/', label: 'スレッド', icon: '🏠' },
         { href: '/rooms', label: 'ルーム', icon: '🎤' },
         { href: '/messages', label: 'メッセージ', icon: '💬' },
     ];
