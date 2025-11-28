@@ -7,6 +7,7 @@ import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
+import { Linkify } from '@/components/common/Linkify';
 import Navbar from '@/components/Navbar';
 import styles from './page.module.css';
 
@@ -166,6 +167,7 @@ export default function ThreadDetailPage() {
                     ← 戻る
                 </button>
 
+
                 {/* スレッド本体 */}
                 <div className={styles.threadMain}>
                     <h1 className={styles.threadTitle}>{thread.title}</h1>
@@ -176,7 +178,9 @@ export default function ThreadDetailPage() {
                             <p className={styles.timestamp}>{formatTime(thread.timestamp)}</p>
                         </div>
                     </div>
-                    <p className={styles.threadContent}>{thread.content}</p>
+                    <p className={styles.threadContent}>
+                        <Linkify>{thread.content}</Linkify>
+                    </p>
                 </div>
 
                 {/* 返信一覧 */}
@@ -191,7 +195,9 @@ export default function ThreadDetailPage() {
                                     <p className={styles.replyTimestamp}>{formatTime(reply.timestamp)}</p>
                                 </div>
                             </div>
-                            <p className={styles.replyContent}>{reply.content}</p>
+                            <p className={styles.replyContent}>
+                                <Linkify>{reply.content}</Linkify>
+                            </p>
                         </div>
                     ))}
                 </div>

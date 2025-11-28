@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ref, push, serverTimestamp } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
@@ -9,12 +10,24 @@ import Avatar from '@/components/common/Avatar';
 import styles from './PostComposer.module.css';
 
 export default function PostComposer() {
+    const searchParams = useSearchParams();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const { user } = useAuth();
     const maxTitleLength = 100;
     const maxContentLength = 500;
+
+    // URLパラメータからスコアを読み取る
+    useEffect(() => {
+        const score = searchParams.get('score');
+        const game = searchParams.get('game');
+
+        if (score && game) {
+            setTitle(`${game}でハイスコア達成！`);
+            setContent(`スコア: ${score}点\n\n${game}をプレイしました！`);
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

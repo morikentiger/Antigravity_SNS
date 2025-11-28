@@ -6,6 +6,7 @@ import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
+import { Linkify } from '@/components/common/Linkify';
 import styles from './PostCard.module.css';
 
 interface Post {
@@ -93,8 +94,12 @@ export default function PostCard({ post }: PostCardProps) {
                     <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
                 </div>
             </div>
+
+
             {post.title && <h4 className={styles.title}>{post.title}</h4>}
-            <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{post.content}</p>
+            <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <Linkify>{post.content}</Linkify>
+            </p>
             <div className={styles.actions}>
                 <button
                     onClick={handleLike}
