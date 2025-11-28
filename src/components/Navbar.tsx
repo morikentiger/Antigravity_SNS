@@ -17,6 +17,7 @@ export default function Navbar() {
     const navItems = [
         { href: '/', label: 'スレッド', icon: '🏠' },
         { href: '/rooms', label: 'ルーム', icon: '🎤' },
+        { href: '/ranking', label: 'ランキング', icon: '🏆' },
         { href: '/messages', label: 'メッセージ', icon: '💬' },
     ];
 
