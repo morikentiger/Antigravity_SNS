@@ -7,6 +7,8 @@ import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
 import { Linkify } from '@/components/common/Linkify';
+import UserStatusCard from './UserStatusCard';
+import { calculateUserDataFromPost } from '@/lib/sentiment';
 import styles from './PostCard.module.css';
 
 interface Post {
@@ -93,6 +95,19 @@ export default function PostCard({ post }: PostCardProps) {
                     <h4 className={styles.userName}>{post.userName}</h4>
                     <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
                 </div>
+            </div>
+
+            {/* STATUS Visualization */}
+            <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+                <UserStatusCard
+                    userId={post.userId}
+                    userData={calculateUserDataFromPost({
+                        content: post.content,
+                        likes: likeCount,
+                        replyCount: post.replyCount,
+                        reports: []
+                    })}
+                />
             </div>
 
 
