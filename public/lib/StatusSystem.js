@@ -122,11 +122,12 @@ class StatusRenderer {
 
         // Create effect layers
         this.elements = {
-            sky: this.createLayer('status-sky'), // New Sky Layer
+            sky: this.createLayer('status-sky'),
             sunny: this.createLayer('status-sunny'),
             rainbow: this.createLayer('status-rainbow'),
-            cloudCanvas: this.createCanvas('status-clouds'), // New Cloud Canvas
-            flowerCanvas: this.createCanvas('status-flowers'),
+            cloudCanvas: this.createCanvas('status-clouds'),
+            staticFlowerCanvas: this.createCanvas('status-flowers-static'), // New Static Layer
+            flowerCanvas: this.createCanvas('status-flowers'), // Dynamic Layer
             darkness: this.createLayer('status-darkness'),
             noise: this.createLayer('status-noise'),
             rainCanvas: this.createCanvas('status-rain')
@@ -134,6 +135,10 @@ class StatusRenderer {
 
         // Apply styles
         this.applyStyles();
+
+        // Initialize caches
+        this.flowerCaches = {};
+        this.initFlowerCache();
     }
 
     createLayer(id) {
@@ -208,6 +213,7 @@ class StatusRenderer {
 
         // Canvas z-indexes
         this.elements.cloudCanvas.style.zIndex = '2'; // Clouds above sun/sky, below rain
+        this.elements.staticFlowerCanvas.style.zIndex = '11'; // Behind dynamic flowers
         this.elements.flowerCanvas.style.zIndex = '12';
         this.elements.rainCanvas.style.zIndex = '10';
     }
@@ -215,6 +221,7 @@ class StatusRenderer {
     setupCanvas() {
         this.ctxRain = this.elements.rainCanvas.getContext('2d');
         this.ctxFlowers = this.elements.flowerCanvas.getContext('2d');
+        this.ctxStaticFlowers = this.elements.staticFlowerCanvas.getContext('2d'); // New Context
         this.ctxClouds = this.elements.cloudCanvas.getContext('2d');
 
         this.resizeCanvas();
@@ -227,8 +234,46 @@ class StatusRenderer {
         this.elements.rainCanvas.height = rect.height;
         this.elements.flowerCanvas.width = rect.width;
         this.elements.flowerCanvas.height = rect.height;
+        this.elements.staticFlowerCanvas.width = rect.width;
+        this.elements.staticFlowerCanvas.height = rect.height;
         this.elements.cloudCanvas.width = rect.width;
         this.elements.cloudCanvas.height = rect.height;
+
+        // Clear static canvas on resize as positions might be invalid
+        // Ideally we would redraw all static flowers, but for now just clear
+        this.ctxStaticFlowers.clearRect(0, 0, rect.width, rect.height);
+        this.flowers = [];
+    }
+
+    initFlowerCache() {
+        const colors = ['#ffffff', '#fffacd', '#ffeb3b', '#fafad2', '#ffe4b5', '#f0f8ff'];
+
+        colors.forEach(color => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+
+            // Draw flower center at 16, 16
+            ctx.translate(16, 16);
+
+            // Draw petals
+            ctx.fillStyle = color;
+            for (let p = 0; p < 5; p++) {
+                ctx.beginPath();
+                ctx.ellipse(0, -8, 4, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.rotate((Math.PI * 2) / 5);
+            }
+
+            // Draw center
+            ctx.beginPath();
+            ctx.fillStyle = '#ffeb3b';
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            this.flowerCaches[color] = canvas;
+        });
     }
 
     render(state) {
@@ -465,13 +510,23 @@ class StatusRenderer {
             rotation: rotation,
             scale: 0,
             maxScale: 0.2 + Math.random() * 0.3,
-            color: color
+            color: color,
+            isStatic: false // Track if baked to static layer
         });
     }
 
     animate() {
+        // FPS Throttling
+        const now = Date.now();
+        if (this.lastFrameTime && now - this.lastFrameTime < 1000 / 30) { // Limit to 30 FPS
+            this.animationFrameId = requestAnimationFrame(() => this.animate());
+            return;
+        }
+        this.lastFrameTime = now;
+
         const ctxRain = this.ctxRain;
         const ctxFlowers = this.ctxFlowers;
+        const ctxStaticFlowers = this.ctxStaticFlowers;
         const ctxClouds = this.ctxClouds;
         const width = this.elements.rainCanvas.width;
         const height = this.elements.rainCanvas.height;
@@ -479,6 +534,7 @@ class StatusRenderer {
         ctxRain.clearRect(0, 0, width, height);
         ctxFlowers.clearRect(0, 0, width, height);
         ctxClouds.clearRect(0, 0, width, height);
+        // NOTE: We DO NOT clear ctxStaticFlowers here! That's the optimization.
 
         // --- Cloud Logic ---
         this.clouds = this.clouds || [];
@@ -568,10 +624,12 @@ class StatusRenderer {
         if (this.lastState && this.lastState.energy > 0.7) {
             const energyLevel = (this.lastState.energy - 0.7) / 0.3;
             const targetFlowerCount = Math.floor(energyLevel * 2400) + 800;
-            const currentBorderFlowers = this.flowers.filter(f => f.type === 'corner').length;
 
-            if (currentBorderFlowers < targetFlowerCount) {
-                const deficit = targetFlowerCount - currentBorderFlowers;
+            // Count all flowers (static + dynamic)
+            const currentTotalFlowers = this.flowers.filter(f => f.type === 'corner').length;
+
+            if (currentTotalFlowers < targetFlowerCount) {
+                const deficit = targetFlowerCount - currentTotalFlowers;
                 const spawnCount = Math.min(deficit, 50);
 
                 for (let k = 0; k < spawnCount; k++) {
@@ -579,12 +637,34 @@ class StatusRenderer {
                 }
             }
         } else {
-            const borderFlowers = this.flowers.filter(f => f.type === 'corner');
-            if (borderFlowers.length > 0) {
-                const removeCount = Math.min(5, borderFlowers.length);
-                for (let k = 0; k < removeCount; k++) {
-                    const idx = this.flowers.indexOf(borderFlowers[k]);
-                    if (idx !== -1) this.flowers.splice(idx, 1);
+            // If energy drops, we need to clear flowers.
+            // Since many are static, we might need to clear the static canvas and reset.
+            // For smooth removal, we can clear static canvas and move some back to dynamic to shrink them?
+            // Or just clear everything if energy drops significantly.
+
+            // Simple approach: If energy < 0.7, clear everything gradually
+            if (this.flowers.length > 0) {
+                // Clear static canvas once if we start removing
+                // This is a bit abrupt, but handling individual static flower removal is hard.
+                // Better: Just clear static canvas and let them re-grow if needed, or fade out.
+
+                // For now: Just remove from array. Since static canvas isn't cleared, they remain visible!
+                // FIX: We need to clear static canvas if we want to remove flowers.
+
+                // Strategy: If we need to remove flowers, we clear static canvas and redraw only remaining static flowers?
+                // Too expensive.
+
+                // Strategy: Fade out the entire static canvas?
+                if (this.flowers.length > 0) {
+                    // Fade out static canvas
+                    ctxStaticFlowers.globalCompositeOperation = 'destination-out';
+                    ctxStaticFlowers.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctxStaticFlowers.fillRect(0, 0, width, height);
+                    ctxStaticFlowers.globalCompositeOperation = 'source-over';
+
+                    // Remove from array
+                    const removeCount = Math.min(50, this.flowers.length);
+                    this.flowers.splice(0, removeCount);
                 }
             }
         }
@@ -595,29 +675,44 @@ class StatusRenderer {
                 const f = this.flowers[i];
 
                 if (f.type === 'corner') {
+                    if (f.isStatic) continue; // Skip if already baked
+
                     if (f.scale < f.maxScale) {
-                        f.scale += 0.03;
+                        f.scale += 0.05; // Fast growth
+                    } else {
+                        // Reached max scale -> Bake to static layer
+                        f.isStatic = true;
+
+                        ctxStaticFlowers.save();
+                        ctxStaticFlowers.translate(f.x, f.y);
+                        ctxStaticFlowers.rotate(f.rotation);
+                        ctxStaticFlowers.scale(f.scale, f.scale);
+
+                        // Draw from cache
+                        const cache = this.flowerCaches[f.color];
+                        if (cache) {
+                            ctxStaticFlowers.drawImage(cache, -16, -16);
+                        }
+
+                        ctxStaticFlowers.restore();
+                        continue; // Done for this frame
                     }
 
+                    // Draw growing flower (Dynamic)
                     ctxFlowers.save();
                     ctxFlowers.translate(f.x, f.y);
                     ctxFlowers.rotate(f.rotation);
                     ctxFlowers.scale(f.scale, f.scale);
 
-                    ctxFlowers.fillStyle = f.color;
-                    for (let p = 0; p < 5; p++) {
-                        ctxFlowers.beginPath();
-                        ctxFlowers.ellipse(0, -15, 8, 15, 0, 0, Math.PI * 2);
-                        ctxFlowers.fill();
-                        ctxFlowers.rotate((Math.PI * 2) / 5);
+                    // Draw from cache
+                    const cache = this.flowerCaches[f.color];
+                    if (cache) {
+                        ctxFlowers.drawImage(cache, -16, -16);
                     }
-                    ctxFlowers.beginPath();
-                    ctxFlowers.fillStyle = '#ffeb3b';
-                    ctxFlowers.arc(0, 0, 5, 0, Math.PI * 2);
-                    ctxFlowers.fill();
 
                     ctxFlowers.restore();
                 } else {
+                    // Flow particles (keep existing logic)
                     f.y -= f.speed;
                     f.wobble += 0.05;
                     const x = f.x + Math.sin(f.wobble) * 20;
@@ -627,16 +722,12 @@ class StatusRenderer {
                     ctxFlowers.arc(x, f.y, f.size, 0, Math.PI * 2);
                     ctxFlowers.fill();
 
-                    ctxFlowers.shadowBlur = 10;
-                    ctxFlowers.shadowColor = f.color;
-
                     if (f.y < -10) {
                         this.flowers.splice(i, 1);
                         i--;
                     }
                 }
             }
-            ctxFlowers.shadowBlur = 0;
         }
 
         // Noise animation
