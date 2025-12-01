@@ -44,13 +44,27 @@ AntigravityにSTATUSシステムを統合しました。STATUSは投稿内容か
 
 STATUSシステムは感情状態に応じて以下の視覚効果を表示します：
 
-#### ポジティブな状態
-- **晴れ (Sunny)**: mood > 0.6 かつ stress < 0.4
+#### 天候システム (New!)
+雲量 (Cloudiness) に基づいて天候が変化します。
+計算式: `Cloudiness = (1 - Mood) * 0.5 + Stress * 0.5`
+
+- **快晴 (Clear)**: Cloudiness 0.0 - 0.2
+  - 雲がほとんどない状態 (0-2個)
+  - Moodが高く、Stressが低い状態
+  - 空の色: 鮮やかな青
+- **晴れ (Sunny)**: Cloudiness 0.2 - 0.8
+  - 適度な雲がある状態 (2-10個)
+  - 通常の状態
+  - 太陽の光が差し込む
+- **曇り (Cloudy)**: Cloudiness 0.8 - 1.0
+  - 雲が多い状態 (10-20個)
+  - Moodが低い、またはStressが高い状態
+  - 空の色: グレーがかった色
+
+#### その他の効果
 - **虹 (Rainbow)**: mood > 0.8 かつ stress < 0.2
 - **花 (Flowers)**: flow > 0.6 で表示される上昇する粒子
 - **境界の花**: energy > 0.7 で画面周辺に咲く花
-
-#### ネガティブな状態
 - **暗闇 (Darkness)**: mood < 0.3 または stress > 0.5
 - **雨 (Rain)**: stress > 0.5
 - **雷 (Thunder)**: stress > 0.85

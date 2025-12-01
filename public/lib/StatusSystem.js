@@ -122,8 +122,10 @@ class StatusRenderer {
 
         // Create effect layers
         this.elements = {
+            sky: this.createLayer('status-sky'), // New Sky Layer
             sunny: this.createLayer('status-sunny'),
             rainbow: this.createLayer('status-rainbow'),
+            cloudCanvas: this.createCanvas('status-clouds'), // New Cloud Canvas
             flowerCanvas: this.createCanvas('status-flowers'),
             darkness: this.createLayer('status-darkness'),
             noise: this.createLayer('status-noise'),
@@ -167,12 +169,17 @@ class StatusRenderer {
     }
 
     applyStyles() {
-        // Sunny effect
-        this.elements.sunny.style.background = 'radial-gradient(circle at top right, rgba(255, 220, 100, 0.4), transparent 70%)';
+        // Sky Layer (Base Background)
+        this.elements.sky.style.background = 'linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%)';
+        this.elements.sky.style.zIndex = '0';
+        this.elements.sky.style.transition = 'filter 2s ease'; // Smooth transition for cloudy
+
+        // Sunny effect (Sun Glow)
+        this.elements.sunny.style.background = 'radial-gradient(circle at top right, rgba(255, 255, 200, 0.8), transparent 40%)';
         this.elements.sunny.style.mixBlendMode = 'screen';
-        this.elements.sunny.style.opacity = '0';
+        this.elements.sunny.style.opacity = '1'; // Default visible
         this.elements.sunny.style.transition = 'opacity 1s ease';
-        this.elements.sunny.style.zIndex = '5';
+        this.elements.sunny.style.zIndex = '1';
 
         // Rainbow effect
         this.elements.rainbow.style.background = `radial-gradient(circle at 50% 100%,
@@ -189,7 +196,7 @@ class StatusRenderer {
         this.elements.rainbow.style.transition = 'opacity 2s ease';
         this.elements.rainbow.style.zIndex = '4';
 
-        // Darkness effect
+        // Darkness effect (Overlay for night/deep depression)
         this.elements.darkness.style.backgroundColor = 'black';
         this.elements.darkness.style.opacity = '0';
         this.elements.darkness.style.zIndex = '3';
@@ -200,6 +207,7 @@ class StatusRenderer {
         this.elements.noise.style.zIndex = '6';
 
         // Canvas z-indexes
+        this.elements.cloudCanvas.style.zIndex = '2'; // Clouds above sun/sky, below rain
         this.elements.flowerCanvas.style.zIndex = '12';
         this.elements.rainCanvas.style.zIndex = '10';
     }
@@ -207,6 +215,7 @@ class StatusRenderer {
     setupCanvas() {
         this.ctxRain = this.elements.rainCanvas.getContext('2d');
         this.ctxFlowers = this.elements.flowerCanvas.getContext('2d');
+        this.ctxClouds = this.elements.cloudCanvas.getContext('2d');
 
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
@@ -218,15 +227,31 @@ class StatusRenderer {
         this.elements.rainCanvas.height = rect.height;
         this.elements.flowerCanvas.width = rect.width;
         this.elements.flowerCanvas.height = rect.height;
+        this.elements.cloudCanvas.width = rect.width;
+        this.elements.cloudCanvas.height = rect.height;
     }
 
     render(state) {
         this.lastState = state;
+
+        // Calculate Cloudiness (0.0 - 1.0)
+        // 0-0.2: Clear (Kaisei)
+        // 0.2-0.8: Sunny (Hare)
+        // 0.8-1.0: Cloudy (Kumori)
+        // Formula: (1 - Mood) * 0.5 + Stress * 0.5
+        // Mood=1, Stress=0 -> 0.0 (Clear)
+        // Mood=0.5, Stress=0 -> 0.25 (Sunny)
+        // Mood=0, Stress=1 -> 1.0 (Cloudy/Rain)
+        const cloudiness = (1 - state.mood) * 0.5 + state.stress * 0.5;
+
+        this.updateCloudState(cloudiness);
+        this.applySky(cloudiness);
+        this.applySunny(state.mood, state.stress, cloudiness);
+
         this.applyDarkness(state.mood, state.stress);
         this.applyNoise(state.stress);
         this.updateRainState(state.stress);
         this.updateThunderState(state.stress);
-        this.applySunny(state.mood, state.stress);
         this.applyRainbow(state.mood, state.stress);
         this.updateFlowState(state.flow);
     }
@@ -246,10 +271,14 @@ class StatusRenderer {
         this.elements.darkness.style.opacity = totalDarkness;
     }
 
-    applySunny(mood, stress) {
+    applySunny(mood, stress, cloudiness) {
+        // Sun is visible if cloudiness < 0.8 (Not Cloudy)
+        // And Mood is decent
         let opacity = 0;
-        if (mood > 0.6 && stress < 0.4) {
-            opacity = Math.min((mood - 0.6) / 0.4, (0.4 - stress) / 0.4);
+        if (cloudiness <= 0.8) {
+            opacity = 1.0 - (cloudiness / 0.8); // Fade out as clouds increase
+            // Boost if mood is high
+            if (mood > 0.8) opacity = 1.0;
         }
         this.elements.sunny.style.opacity = Math.max(0, opacity);
     }
@@ -344,6 +373,53 @@ class StatusRenderer {
         });
     }
 
+    updateCloudState(cloudiness) {
+        this.cloudiness = cloudiness;
+        // Target clouds: 0 to 20
+        // Clear (0-0.2): 0-2 clouds
+        // Sunny (0.2-0.8): 2-10 clouds
+        // Cloudy (0.8-1.0): 10-20 clouds
+        this.targetCloudCount = Math.floor(cloudiness * 20);
+        if (cloudiness < 0.1) this.targetCloudCount = 0;
+    }
+
+    applySky(cloudiness) {
+        // Change sky appearance based on cloudiness
+        if (cloudiness > 0.8) {
+            // Cloudy: Greyish
+            this.elements.sky.style.filter = 'grayscale(80%) brightness(90%)';
+        } else {
+            // Sunny/Clear: Blue
+            this.elements.sky.style.filter = 'none';
+        }
+    }
+
+    addCloud() {
+        const w = this.elements.cloudCanvas.width;
+        const h = this.elements.cloudCanvas.height;
+        this.clouds = this.clouds || [];
+
+        // Random cloud shape parameters
+        const puffs = [];
+        const puffCount = 3 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < puffCount; i++) {
+            puffs.push({
+                x: (Math.random() - 0.5) * 60,
+                y: (Math.random() - 0.5) * 30,
+                r: 20 + Math.random() * 30
+            });
+        }
+
+        this.clouds.push({
+            x: -150, // Start off-screen left
+            y: Math.random() * (h * 0.6), // Top 60% of screen
+            speed: 0.2 + Math.random() * 0.5,
+            scale: 0.5 + Math.random() * 1.0,
+            opacity: 0.6 + Math.random() * 0.3,
+            puffs: puffs
+        });
+    }
+
     addBorderFlower() {
         const w = this.elements.flowerCanvas.width;
         const h = this.elements.flowerCanvas.height;
@@ -396,11 +472,56 @@ class StatusRenderer {
     animate() {
         const ctxRain = this.ctxRain;
         const ctxFlowers = this.ctxFlowers;
+        const ctxClouds = this.ctxClouds;
         const width = this.elements.rainCanvas.width;
         const height = this.elements.rainCanvas.height;
 
         ctxRain.clearRect(0, 0, width, height);
         ctxFlowers.clearRect(0, 0, width, height);
+        ctxClouds.clearRect(0, 0, width, height);
+
+        // --- Cloud Logic ---
+        this.clouds = this.clouds || [];
+
+        // Spawn clouds if below target
+        if (this.clouds.length < this.targetCloudCount) {
+            if (Math.random() < 0.01) { // Slow spawn rate
+                this.addCloud();
+            }
+        } else if (this.clouds.length > this.targetCloudCount) {
+            // Remove excess clouds slowly
+            if (Math.random() < 0.01) {
+                this.clouds.shift();
+            }
+        }
+
+        // Draw Clouds
+        if (this.clouds.length > 0) {
+            for (let i = 0; i < this.clouds.length; i++) {
+                const cloud = this.clouds[i];
+                cloud.x += cloud.speed;
+
+                // Wrap around or remove? Wrap around is better for consistent sky
+                if (cloud.x > width + 150) {
+                    cloud.x = -150;
+                    cloud.y = Math.random() * (height * 0.6);
+                }
+
+                ctxClouds.save();
+                ctxClouds.translate(cloud.x, cloud.y);
+                ctxClouds.scale(cloud.scale, cloud.scale);
+                ctxClouds.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+
+                // Draw puffs
+                for (let p of cloud.puffs) {
+                    ctxClouds.beginPath();
+                    ctxClouds.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctxClouds.fill();
+                }
+
+                ctxClouds.restore();
+            }
+        }
 
         // Rain logic
         if (this.isRaining) {
