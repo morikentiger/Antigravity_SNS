@@ -4,8 +4,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
     User,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     GoogleAuthProvider,
     signOut as firebaseSignOut,
     onAuthStateChanged
@@ -33,17 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // リダイレクト後の結果を処理
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    console.log('Redirect login successful');
-                }
-            })
-            .catch((error) => {
-                console.error('Redirect error:', error);
-            });
-
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
@@ -55,20 +42,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
 
-        // モバイルデバイスを検出
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         try {
-            if (isMobile) {
-                // モバイルではリダイレクト方式を使用
-                await signInWithRedirect(auth, provider);
-            } else {
-                // デスクトップではポップアップ方式を使用
-                await signInWithPopup(auth, provider);
-            }
+            // モバイルでもポップアップ方式を使用（リダイレクト方式の問題を回避するため）
+            await signInWithPopup(auth, provider);
         } catch (error: any) {
             console.error('Error signing in with Google:', error);
-            alert(`Login failed: ${error.message}`);
+            // ポップアップがブロックされた場合などのフォールバックとしてリダイレクトを検討することも可能だが、
+            // まずはポップアップで統一して様子を見る
+            if (error.code === 'auth/popup-blocked') {
+                alert('ポップアップがブロックされました。設定を確認してください。');
+            } else {
+                alert(`Login failed: ${error.message}`);
+            }
         }
     };
 
