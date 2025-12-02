@@ -17,22 +17,40 @@ interface UserStatusCardProps {
 declare global {
     interface Window {
         StatusSystem: any;
+        __statusScriptLoaded?: boolean;
     }
 }
 
 export default function UserStatusCard({ userId, userData }: UserStatusCardProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const statusSystemRef = useRef<any>(null);
-    const scriptLoadedRef = useRef(false);
 
     useEffect(() => {
         // StatusSystemをロード
-        if (typeof window !== 'undefined' && !window.StatusSystem && !scriptLoadedRef.current) {
-            scriptLoadedRef.current = true;
-            const script = document.createElement('script');
-            script.src = '/lib/StatusSystem.js';
-            script.onload = initializeSystem;
-            document.body.appendChild(script);
+        if (typeof window !== 'undefined' && !window.StatusSystem) {
+            // Check if script is already in DOM or globally marked as loaded
+            const existingScript = document.querySelector('script[src="/lib/StatusSystem.js"]');
+
+            if (!existingScript && !window.__statusScriptLoaded) {
+                window.__statusScriptLoaded = true;
+                const script = document.createElement('script');
+                script.src = '/lib/StatusSystem.js';
+                script.onload = () => {
+                    initializeSystem();
+                };
+                script.onerror = () => {
+                    console.error('Failed to load StatusSystem.js');
+                    window.__statusScriptLoaded = false;
+                };
+                document.body.appendChild(script);
+            } else if (existingScript) {
+                // Script exists but not loaded yet, wait for it
+                const handleLoad = () => {
+                    initializeSystem();
+                    existingScript.removeEventListener('load', handleLoad);
+                };
+                existingScript.addEventListener('load', handleLoad);
+            }
         } else if (window.StatusSystem) {
             initializeSystem();
         }

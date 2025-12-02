@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ref, push, serverTimestamp } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { database, storage } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
@@ -14,6 +15,9 @@ export default function PostComposer() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isPosting, setIsPosting] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { user } = useAuth();
     const maxTitleLength = 100;
     const maxContentLength = 500;
@@ -29,12 +33,58 @@ export default function PostComposer() {
         }
     }, [searchParams]);
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('画像サイズは5MB以下にしてください');
+                return;
+            }
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                alert('画像ファイルを選択してください');
+                return;
+            }
+
+            setSelectedImage(file);
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !content.trim() || !user) return;
 
         setIsPosting(true);
         try {
+            let imageUrl = '';
+
+            // Upload image if selected
+            if (selectedImage) {
+                const timestamp = Date.now();
+                const imagePath = `posts/${user.uid}/${timestamp}_${selectedImage.name}`;
+                const imageRef = storageRef(storage, imagePath);
+
+                await uploadBytes(imageRef, selectedImage);
+                imageUrl = await getDownloadURL(imageRef);
+            }
+
             const threadsRef = ref(database, 'threads');
             await push(threadsRef, {
                 title: title.trim(),
@@ -46,11 +96,14 @@ export default function PostComposer() {
                 likes: 0,
                 likedBy: {},
                 replyCount: 0,
+                imageUrl: imageUrl || null,
             });
             setTitle('');
             setContent('');
+            handleRemoveImage();
         } catch (error) {
             console.error('Error creating thread:', error);
+            alert('投稿に失敗しました');
         } finally {
             setIsPosting(false);
         }
@@ -88,10 +141,50 @@ export default function PostComposer() {
                     className={styles.textarea}
                     rows={4}
                 />
+
+                {/* Image Preview */}
+                {imagePreview && (
+                    <div className={styles.imagePreview}>
+                        <img src={imagePreview} alt="Preview" />
+                        <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className={styles.removeImageButton}
+                            aria-label="画像を削除"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 <div className={styles.footer}>
-                    <span className={`${styles.counter} ${isContentOverLimit ? styles.overLimit : ''}`}>
-                        {remainingContentChars}
-                    </span>
+                    <div className={styles.leftActions}>
+                        {/* Hidden file input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            style={{ display: 'none' }}
+                        />
+                        {/* Image upload button */}
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className={styles.imageButton}
+                            aria-label="画像を追加"
+                            disabled={isPosting}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                        </button>
+                        <span className={`${styles.counter} ${isContentOverLimit ? styles.overLimit : ''}`}>
+                            {remainingContentChars}
+                        </span>
+                    </div>
                     <Button
                         type="submit"
                         disabled={!title.trim() || !content.trim() || isTitleOverLimit || isContentOverLimit || isPosting}

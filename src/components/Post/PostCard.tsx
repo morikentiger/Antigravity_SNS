@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ref, set, get, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
 import { Linkify } from '@/components/common/Linkify';
-import UserStatusCard from './UserStatusCard';
 import { calculateUserDataFromPost } from '@/lib/sentiment';
 import styles from './PostCard.module.css';
 
@@ -22,6 +21,7 @@ interface Post {
     likes: number;
     likedBy: { [key: string]: boolean };
     replyCount?: number;
+    imageUrl?: string;
 }
 
 interface PostCardProps {
@@ -87,34 +87,178 @@ export default function PostCard({ post }: PostCardProps) {
         return `${days}日前`;
     };
 
+    // Calculate simple background gradient based on sentiment
+    const userData = calculateUserDataFromPost({
+        content: post.content,
+        likes: likeCount,
+        replyCount: post.replyCount,
+        reports: []
+    });
+
+    // Generate background style and weather based on mood and stress
+    const getWeatherState = () => {
+        const mood = userData.moodScore / 100; // 0-1
+        const stress = Math.min(userData.reportCount / 10, 1); // 0-1
+        const negativeSentiment = userData.negativeSentiment; // 0-1
+
+        // Weather conditions (adjusted for more variety)
+        // 晴れ (Sunny): mood > 0.7 AND stress < 0.3 (より厳しく)
+        // 曇り (Cloudy): mood 0.4-0.7 OR stress 0.3-0.6 (より広く)
+        // 雨 (Rainy): mood < 0.4 OR stress 0.6-0.75
+        // 雷雨 (Thunderstorm): stress > 0.75 OR (mood < 0.25 AND negativeSentiment > 0.4)
+
+        let weather = 'cloudy'; // デフォルトを曇りに変更
+
+        if (stress > 0.75 || (mood < 0.25 && negativeSentiment > 0.4)) {
+            weather = 'thunderstorm';
+        } else if (mood < 0.4 || stress > 0.6) {
+            weather = 'rainy';
+        } else if (mood > 0.7 && stress < 0.3) {
+            weather = 'sunny'; // 晴れは高い気分が必要
+        }
+        // それ以外は曇り
+
+        return { mood, stress, weather };
+    };
+
+    const getStatusBackgroundStyle = () => {
+        const { mood, stress, weather } = getWeatherState();
+
+        // Sky color based on weather
+        let skyColor1, skyColor2;
+
+        switch (weather) {
+            case 'sunny':
+                // Bright blue sky
+                skyColor1 = 'hsl(200, 80%, 75%)';
+                skyColor2 = 'hsl(200, 70%, 65%)';
+                break;
+            case 'cloudy':
+                // Gray-blue sky
+                skyColor1 = 'hsl(200, 40%, 60%)';
+                skyColor2 = 'hsl(200, 35%, 50%)';
+                break;
+            case 'rainy':
+                // Dark gray sky
+                skyColor1 = 'hsl(200, 30%, 45%)';
+                skyColor2 = 'hsl(200, 25%, 35%)';
+                break;
+            case 'thunderstorm':
+                // Very dark, stormy sky
+                skyColor1 = 'hsl(200, 20%, 30%)';
+                skyColor2 = 'hsl(200, 15%, 20%)';
+                break;
+            default:
+                skyColor1 = 'hsl(200, 60%, 70%)';
+                skyColor2 = 'hsl(200, 50%, 60%)';
+        }
+
+        // Cloud coverage
+        const cloudOpacity = weather === 'sunny' ? 0.1 :
+            weather === 'cloudy' ? 0.5 :
+                weather === 'rainy' ? 0.7 : 0.85;
+
+        return {
+            background: `
+                linear-gradient(
+                    to bottom,
+                    ${skyColor1},
+                    ${skyColor2}
+                ),
+                radial-gradient(
+                    ellipse at top,
+                    rgba(255, 255, 255, ${cloudOpacity}),
+                    transparent 60%
+                )
+            `,
+            filter: weather === 'thunderstorm' ? 'brightness(0.7)' : 'none',
+            transition: 'all 2s ease'
+        };
+    };
+
+    const getWeatherIcon = () => {
+        const { weather } = getWeatherState();
+
+        const icons = {
+            sunny: '☀️',
+            cloudy: '☁️',
+            rainy: '🌧️',
+            thunderstorm: '⛈️'
+        };
+
+        return icons[weather as keyof typeof icons];
+    };
+
     return (
         <article className={styles.card} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
-            <div className={styles.header}>
-                <Avatar src={post.userAvatar} alt={post.userName} size="md" />
-                <div className={styles.userInfo}>
-                    <h4 className={styles.userName}>{post.userName}</h4>
-                    <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
+            {/* STATUS Background Layer - Weather Expression */}
+            <div
+                className={styles.statusBackground}
+                style={getStatusBackgroundStyle()}
+            >
+                {/* Sun for sunny weather */}
+                {getWeatherState().weather === 'sunny' && (
+                    <div className={styles.sun} />
+                )}
+
+                {/* Flower field for sunny weather */}
+                {getWeatherState().weather === 'sunny' && (
+                    <div className={styles.flowerField}>
+                        {[...Array(15)].map((_, i) => (
+                            <div
+                                key={i}
+                                className={styles.flower}
+                                style={{
+                                    left: `${5 + (i * 6)}%`,
+                                    bottom: `${Math.random() * 15}%`,
+                                    animationDelay: `${Math.random() * 2}s`
+                                }}
+                            >
+                                🌸
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Rain effect for rainy/thunderstorm weather */}
+                {(getWeatherState().weather === 'rainy' || getWeatherState().weather === 'thunderstorm') && (
+                    <div className={styles.rainEffect}>
+                        {[...Array(getWeatherState().weather === 'thunderstorm' ? 30 : 20)].map((_, i) => (
+                            <div
+                                key={i}
+                                className={styles.rainDrop}
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    animationDelay: `${Math.random() * 2}s`,
+                                    animationDuration: `${0.5 + Math.random() * 0.5}s`
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Lightning flash for thunderstorm */}
+                {getWeatherState().weather === 'thunderstorm' && (
+                    <div className={styles.lightning} />
+                )}
+            </div>
+
+            {/* コンテンツレイヤー */}
+            <div className={styles.contentLayer}>
+                <div className={styles.header}>
+                    <Avatar src={post.userAvatar} alt={post.userName} size="md" />
+                    <div className={styles.userInfo}>
+                        <h4 className={styles.userName}>{post.userName}</h4>
+                        <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
+                    </div>
                 </div>
+
+                {post.title && <h4 className={styles.title}>{post.title}</h4>}
+                <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <Linkify>{post.content}</Linkify>
+                </p>
             </div>
 
-            {/* STATUS Visualization */}
-            <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-                <UserStatusCard
-                    userId={post.userId}
-                    userData={calculateUserDataFromPost({
-                        content: post.content,
-                        likes: likeCount,
-                        replyCount: post.replyCount,
-                        reports: []
-                    })}
-                />
-            </div>
-
-
-            {post.title && <h4 className={styles.title}>{post.title}</h4>}
-            <p className={styles.content} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                <Linkify>{post.content}</Linkify>
-            </p>
             <div className={styles.actions}>
                 <button
                     onClick={handleLike}
@@ -139,6 +283,21 @@ export default function PostCard({ post }: PostCardProps) {
                     </svg>
                     <span>返信 {post.replyCount || 0}</span>
                 </button>
+
+                {/* 画像添付バッジ (Simple) */}
+                {post.imageUrl && (
+                    <div
+                        className={styles.imageBadge}
+                        title="画像あり"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                    </div>
+                )}
+
                 {user && user.uid === post.userId && (
                     <button
                         onClick={async (e) => {

@@ -19,6 +19,7 @@ interface Thread {
     userName: string;
     userAvatar: string;
     timestamp: number;
+    imageUrl?: string;
 }
 
 interface Reply {
@@ -181,6 +182,13 @@ export default function ThreadDetailPage() {
                     <p className={styles.threadContent}>
                         <Linkify>{thread.content}</Linkify>
                     </p>
+
+                    {/* Display image if available */}
+                    {thread.imageUrl && (
+                        <div className={styles.threadImage}>
+                            <img src={thread.imageUrl} alt="スレッド画像" />
+                        </div>
+                    )}
                 </div>
 
                 {/* 返信一覧 */}

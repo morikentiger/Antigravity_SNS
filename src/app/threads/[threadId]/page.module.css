@@ -66,6 +66,19 @@
     word-break: break-word;
 }
 
+.threadImage {
+    margin-top: var(--space-lg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.threadImage img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 .repliesSection {
     margin-bottom: var(--space-xl);
 }

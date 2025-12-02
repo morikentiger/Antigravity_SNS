@@ -1,86 +1,117 @@
 /**
  * Sentiment analysis utilities for STATUS integration
+ *
+ * Algorithm:
+ * - Energy: Positive words increase, negative words decrease
+ * - Flow: Content length and engagement markers
+ * - Mood: Balance of positive vs negative sentiment
  */
 
-// Simple sentiment analysis based on keywords
+// Positive keywords (ポジティブワード)
 const POSITIVE_KEYWORDS = [
-    '嬉しい', '楽しい', '幸せ', '最高', '素晴らしい', 'ありがとう', '感謝',
-    '好き', '愛', '笑', 'w', 'ｗ', '😊', '😄', '😃', '🎉', '✨', '💖', '❤️',
-    'すごい', 'いいね', 'かわいい', '美しい', 'よかった', '成功', '達成'
+    // 感情
+    '嬉しい', '楽しい', '幸せ', '喜び', '感動', '感謝', 'ありがとう',
+    '好き', '愛', '大好き', '素敵', '素晴らしい', '最高', '最強',
+    // 笑い
+    '笑', 'w', 'ｗ', 'www', 'ｗｗｗ', 'lol', '草',
+    // 評価
+    'すごい', 'やばい', 'いいね', 'かわいい', '美しい', 'かっこいい',
+    'よかった', 'ナイス', 'グッド', 'good', 'nice', 'great',
+    // 成功
+    '成功', '達成', '完成', 'できた', 'やった', '勝利', '合格',
+    // 絵文字
+    '😊', '😄', '😃', '😁', '🎉', '✨', '💖', '❤️', '🥰', '😍',
+    '👍', '🙌', '💪', '🎊', '🌟', '⭐', '💯'
 ];
 
+// Negative keywords (ネガティブワード)
 const NEGATIVE_KEYWORDS = [
-    '悲しい', '辛い', '苦しい', '嫌', '最悪', 'ムカつく', '腹立つ',
-    '怒', 'うざい', 'きもい', '死', '😢', '😭', '😡', '😠', '💢',
-    'やばい', 'ダメ', '失敗', '困った', '疲れた', 'しんどい'
+    // 感情
+    '悲しい', '辛い', '苦しい', '寂しい', '虚しい', '憂鬱',
+    '嫌', '嫌い', '最悪', '最低', 'ムカつく', '腹立つ', '怒',
+    // 状態
+    'うざい', 'きもい', 'だるい', '疲れた', 'しんどい', 'つらい',
+    'ダメ', '無理', '失敗', '困った', '不安', '心配',
+    // 強い否定
+    '死', '消えろ', 'クソ', 'ゴミ', '地獄', '絶望',
+    // 絵文字
+    '😢', '😭', '😡', '😠', '💢', '😰', '😱', '😞', '😔', '💔'
 ];
 
 export interface SentimentAnalysis {
-    moodScore: number;
-    positiveSentiment: number;
-    negativeSentiment: number;
-    activityLevel: number;
-    flowScore: number;
+    energy: number;        // 0-1: エネルギーレベル
+    flow: number;          // 0-1: フロー（文章の長さと勢い）
+    mood: number;          // 0-100: 気分スコア
+    positiveSentiment: number;  // 0-1: ポジティブ度
+    negativeSentiment: number;  // 0-1: ネガティブ度
 }
 
 /**
  * Analyze sentiment from post content
+ *
+ * Algorithm:
+ * 1. Count positive and negative keywords
+ * 2. Energy = (positive - negative) normalized to 0-1
+ * 3. Flow = content length (longer = higher flow)
+ * 4. Mood = 50 + (positive * 10) - (negative * 10)
  */
 export function analyzePostSentiment(content: string): SentimentAnalysis {
-    const lowerContent = content.toLowerCase();
-
-    // Count positive and negative keywords
+    // Count keywords
     let positiveCount = 0;
     let negativeCount = 0;
 
     POSITIVE_KEYWORDS.forEach(keyword => {
-        const matches = content.match(new RegExp(keyword, 'g'));
+        const regex = new RegExp(keyword, 'gi');
+        const matches = content.match(regex);
         if (matches) positiveCount += matches.length;
     });
 
     NEGATIVE_KEYWORDS.forEach(keyword => {
-        const matches = content.match(new RegExp(keyword, 'g'));
+        const regex = new RegExp(keyword, 'gi');
+        const matches = content.match(regex);
         if (matches) negativeCount += matches.length;
     });
 
-    // Calculate sentiment scores (0-1 range)
+    // Calculate Energy (ポジティブワードで上がり、ネガティブワードで下がる)
+    // Base: 0.5, +0.2 per positive word, -0.25 per negative word (倍率UP)
+    const energyRaw = 0.5 + (positiveCount * 0.2) - (negativeCount * 0.25);
+    const energy = Math.max(0, Math.min(1, energyRaw));
+
+    // Calculate Flow (長ければフローが上がる)
+    // 100文字で0.5, 200文字で1.0 (より早く上がる)
+    const contentLength = content.length;
+    let flow = Math.min(contentLength / 200, 1.0);
+
+    // 絵文字や記号でフロー増加 (倍率UP)
+    const hasEmoji = /[\uD800-\uDFFF]|[\u2600-\u27BF]/.test(content);
+    const exclamationCount = (content.match(/[!！]/g) || []).length;
+    const questionCount = (content.match(/[?？]/g) || []).length;
+
+    if (hasEmoji) flow = Math.min(flow + 0.2, 1.0);
+    flow = Math.min(flow + (exclamationCount * 0.1), 1.0);
+    flow = Math.min(flow + (questionCount * 0.05), 1.0);
+
+    // Calculate Mood (0-100) - 倍率UP
+    const moodScore = Math.max(0, Math.min(100,
+        50 + (positiveCount * 15) - (negativeCount * 15)
+    ));
+
+    // Calculate sentiment ratios
     const totalKeywords = positiveCount + negativeCount;
     const positiveSentiment = totalKeywords > 0
-        ? Math.min(positiveCount / Math.max(totalKeywords, 5), 1.0)
+        ? Math.min(positiveCount / totalKeywords, 1.0)
         : 0.5;
 
     const negativeSentiment = totalKeywords > 0
-        ? Math.min(negativeCount / Math.max(totalKeywords, 5), 1.0)
-        : 0.1;
-
-    // Calculate mood score (0-100)
-    const moodScore = Math.max(0, Math.min(100,
-        50 + (positiveCount * 10) - (negativeCount * 10)
-    ));
-
-    // Calculate activity level based on content length and engagement markers
-    const wordCount = content.length;
-    const hasEmoji = /[\uD800-\uDFFF]/.test(content) || /[\u2600-\u27BF]/.test(content);
-    const hasExclamation = /[!！]/.test(content);
-    const hasQuestion = /[?？]/.test(content);
-
-    let activityLevel = Math.min(wordCount / 200, 1.0);
-    if (hasEmoji) activityLevel = Math.min(activityLevel + 0.2, 1.0);
-    if (hasExclamation) activityLevel = Math.min(activityLevel + 0.1, 1.0);
-    if (hasQuestion) activityLevel = Math.min(activityLevel + 0.1, 1.0);
-
-    // Calculate flow score (engagement quality)
-    const flowScore = Math.min(
-        (positiveSentiment * 0.6) + (activityLevel * 0.4),
-        1.0
-    );
+        ? Math.min(negativeCount / totalKeywords, 1.0)
+        : 0.0;
 
     return {
-        moodScore,
+        energy,
+        flow,
+        mood: moodScore,
         positiveSentiment,
-        negativeSentiment,
-        activityLevel,
-        flowScore
+        negativeSentiment
     };
 }
 
@@ -100,11 +131,12 @@ export function calculateUserDataFromPost(post: {
     const replyBoost = Math.min((post.replyCount || 0) / 5, 0.2);
 
     return {
-        moodScore: sentiment.moodScore,
-        positiveSentiment: Math.min(sentiment.positiveSentiment + engagementBoost, 1.0),
+        moodScore: sentiment.mood,
+        energy: Math.min(sentiment.energy + engagementBoost, 1.0),
+        positiveSentiment: sentiment.positiveSentiment,
         negativeSentiment: sentiment.negativeSentiment,
         reportCount: post.reports?.length || 0,
-        activityLevel: Math.min(sentiment.activityLevel + replyBoost, 1.0),
-        flowScore: Math.min(sentiment.flowScore + engagementBoost + replyBoost, 1.0)
+        activityLevel: sentiment.flow,
+        flowScore: Math.min(sentiment.flow + replyBoost, 1.0)
     };
 }
