@@ -5,7 +5,7 @@ import PostComposer from '@/components/Post/PostComposer';
 import PostFeed from '@/components/Post/PostFeed';
 import Button from '@/components/common/Button';
 import styles from './page.module.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ref, push } from 'firebase/database';
 import { database } from '@/lib/firebase';
@@ -16,13 +16,12 @@ const CATEGORY_NAMES: Record<string, string> = {
     'pc': 'PC',
 };
 
-export default function Home() {
-    const { user, signInWithGoogle, loading } = useAuth();
+// URLパラメータを処理するコンポーネント（Suspense境界内で使用）
+function ScoreHandler({ user }: { user: any }) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isCreatingThread, setIsCreatingThread] = useState(false);
 
-    // URLパラメータからスコア情報を受け取り、自動的にスレッドを作成
     useEffect(() => {
         const score = searchParams.get('score');
         const game = searchParams.get('game');
@@ -59,6 +58,12 @@ export default function Home() {
             createScoreThread();
         }
     }, [searchParams, user, isCreatingThread, router]);
+
+    return null;
+}
+
+export default function Home() {
+    const { user, signInWithGoogle, loading } = useAuth();
 
     if (loading) {
         return (
@@ -105,11 +110,16 @@ export default function Home() {
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.main}>
-                <PostComposer />
-                <PostFeed />
+        <>
+            <Suspense fallback={null}>
+                <ScoreHandler user={user} />
+            </Suspense>
+            <div className={styles.container}>
+                <div className={styles.main}>
+                    <PostComposer />
+                    <PostFeed />
+                </div>
             </div>
-        </div>
+        </>
     );
 }
