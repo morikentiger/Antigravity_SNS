@@ -5,9 +5,60 @@ import PostComposer from '@/components/Post/PostComposer';
 import PostFeed from '@/components/Post/PostFeed';
 import Button from '@/components/common/Button';
 import styles from './page.module.css';
+import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { ref, push } from 'firebase/database';
+import { database } from '@/lib/firebase';
+
+const CATEGORY_NAMES: Record<string, string> = {
+    'mobile-portrait': 'スマホ（縦画面）',
+    'mobile-landscape': 'スマホ（横画面）',
+    'pc': 'PC',
+};
 
 export default function Home() {
     const { user, signInWithGoogle, loading } = useAuth();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [isCreatingThread, setIsCreatingThread] = useState(false);
+
+    // URLパラメータからスコア情報を受け取り、自動的にスレッドを作成
+    useEffect(() => {
+        const score = searchParams.get('score');
+        const game = searchParams.get('game');
+        const category = searchParams.get('category');
+
+        if (score && game && user && !isCreatingThread) {
+            setIsCreatingThread(true);
+
+            const createScoreThread = async () => {
+                try {
+                    const threadsRef = ref(database, 'threads');
+                    const categoryName = category ? CATEGORY_NAMES[category] || category : '一般';
+
+                    await push(threadsRef, {
+                        title: `${game}でハイスコア達成！`,
+                        content: `スコア： ${score}点\n部門： ${categoryName}`,
+                        userId: user.uid,
+                        userName: user.displayName || 'Anonymous',
+                        userAvatar: user.photoURL || '',
+                        timestamp: Date.now(),
+                        game: game,
+                        score: parseInt(score),
+                        category: category || 'general',
+                    });
+
+                    // URLパラメータをクリアしてランキングページにリダイレクト
+                    router.push('/ranking');
+                } catch (error) {
+                    console.error('Error creating score thread:', error);
+                    setIsCreatingThread(false);
+                }
+            };
+
+            createScoreThread();
+        }
+    }, [searchParams, user, isCreatingThread, router]);
 
     if (loading) {
         return (

@@ -16,11 +16,21 @@ interface ScoreEntry {
     userId: string;
     timestamp: number;
     threadId: string;
+    category?: string;
+    categoryName?: string;
 }
+
+const CATEGORY_NAMES: Record<string, string> = {
+    'mobile-portrait': 'スマホ（縦画面）',
+    'mobile-landscape': 'スマホ（横画面）',
+    'pc': 'PC',
+    'general': '一般',
+};
 
 export default function RankingPage() {
     const [scores, setScores] = useState<ScoreEntry[]>([]);
     const [selectedGame, setSelectedGame] = useState<string>('all');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -37,6 +47,7 @@ export default function RankingPage() {
                     const gameMatch = thread.title?.match(/(.+)でハイスコア達成！/);
 
                     if (scoreMatch && gameMatch) {
+                        const category = thread.category || 'general';
                         scoresArray.push({
                             id,
                             game: gameMatch[1],
@@ -46,6 +57,8 @@ export default function RankingPage() {
                             userId: thread.userId,
                             timestamp: thread.timestamp,
                             threadId: id,
+                            category: category,
+                            categoryName: CATEGORY_NAMES[category] || category,
                         });
                     }
                 });
@@ -63,10 +76,19 @@ export default function RankingPage() {
     // ゲームの一覧を取得
     const games = ['all', ...Array.from(new Set(scores.map(s => s.game)))];
 
+    // 部門の一覧を取得
+    const categories = ['all', ...Array.from(new Set(scores.map(s => s.category || 'general')))];
+
     // フィルタリングされたスコア
-    const filteredScores = selectedGame === 'all'
-        ? scores
-        : scores.filter(s => s.game === selectedGame);
+    let filteredScores = scores;
+
+    if (selectedGame !== 'all') {
+        filteredScores = filteredScores.filter(s => s.game === selectedGame);
+    }
+
+    if (selectedCategory !== 'all') {
+        filteredScores = filteredScores.filter(s => (s.category || 'general') === selectedCategory);
+    }
 
     // ゲームごとのトップスコアを取得
     const topScoresByGame = new Map<string, ScoreEntry>();
@@ -116,6 +138,19 @@ export default function RankingPage() {
                     ))}
                 </div>
 
+                {/* 部門選択タブ */}
+                <div className={styles.tabs}>
+                    {categories.map(category => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={`${styles.tab} ${selectedCategory === category ? styles.activeTab : ''}`}
+                        >
+                            {category === 'all' ? '全部門' : CATEGORY_NAMES[category] || category}
+                        </button>
+                    ))}
+                </div>
+
                 {loading ? (
                     <div className={styles.loading}>読み込み中...</div>
                 ) : filteredScores.length === 0 ? (
@@ -141,6 +176,9 @@ export default function RankingPage() {
                                 <div className={styles.info}>
                                     <div className={styles.userName}>{entry.userName}</div>
                                     <div className={styles.game}>{entry.game}</div>
+                                    {entry.categoryName && (
+                                        <div className={styles.category}>📱 {entry.categoryName}</div>
+                                    )}
                                 </div>
                                 <div className={styles.scoreSection}>
                                     <div className={styles.score}>{entry.score.toLocaleString()}点</div>
