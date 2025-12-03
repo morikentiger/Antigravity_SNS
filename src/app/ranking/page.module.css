@@ -25,6 +25,15 @@
     margin-bottom: var(--space-lg);
 }
 
+.gameButtons {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: var(--space-lg);
+}
+
+
 .playButton {
     display: inline-block;
     margin-top: var(--space-md);

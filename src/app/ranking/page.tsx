@@ -115,14 +115,24 @@ export default function RankingPage() {
                 <div className={styles.header}>
                     <h1 className={styles.title}>🏆 ハイスコアランキング</h1>
                     <p className={styles.subtitle}>ゲームのハイスコアを競おう！</p>
-                    <a
-                        href="https://morikentiger.github.io/BreakBlockBuild/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.playButton}
-                    >
-                        🎮 ゲームをプレイ
-                    </a>
+                    <div className={styles.gameButtons}>
+                        <a
+                            href="https://morikentiger.github.io/BreakBlockBuild/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.playButton}
+                        >
+                            🎮 BreakBlockBuild
+                        </a>
+                        <a
+                            href="https://morikentiger.github.io/SummonShogi/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.playButton}
+                        >
+                            ♟️ 召喚将棋
+                        </a>
+                    </div>
                 </div>
 
                 {/* ゲーム選択タブ */}
