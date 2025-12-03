@@ -7,35 +7,44 @@
  * - Mood: Balance of positive vs negative sentiment
  */
 
-// Positive keywords (ポジティブワード)
+// Positive keywords (ポジティブワード) - より多くの単語を追加
 const POSITIVE_KEYWORDS = [
     // 感情
     '嬉しい', '楽しい', '幸せ', '喜び', '感動', '感謝', 'ありがとう',
     '好き', '愛', '大好き', '素敵', '素晴らしい', '最高', '最強',
+    'ワクワク', 'ドキドキ', '癒し', '癒される', '平和', '穏やか',
     // 笑い
-    '笑', 'w', 'ｗ', 'www', 'ｗｗｗ', 'lol', '草',
+    '笑', 'w', 'ｗ', 'www', 'ｗｗｗ', 'lol', '草', '爆笑', '面白',
     // 評価
     'すごい', 'やばい', 'いいね', 'かわいい', '美しい', 'かっこいい',
-    'よかった', 'ナイス', 'グッド', 'good', 'nice', 'great',
+    'よかった', 'ナイス', 'グッド', 'good', 'nice', 'great', 'awesome',
+    '綺麗', 'きれい', '可愛い', 'かっこいい', '神', 'エモい',
     // 成功
     '成功', '達成', '完成', 'できた', 'やった', '勝利', '合格',
+    '頑張', 'がんば', 'ファイト', '応援', 'おめでとう',
+    // 自然・美
+    '虹', '太陽', '晴れ', '花', '春', '桜', '青空', '光', '輝',
     // 絵文字
     '😊', '😄', '😃', '😁', '🎉', '✨', '💖', '❤️', '🥰', '😍',
-    '👍', '🙌', '💪', '🎊', '🌟', '⭐', '💯'
+    '👍', '🙌', '💪', '🎊', '🌟', '⭐', '💯', '🌈', '☀️', '🌸', '🌺'
 ];
 
-// Negative keywords (ネガティブワード)
+// Negative keywords (ネガティブワード) - より多くの単語を追加
 const NEGATIVE_KEYWORDS = [
     // 感情
     '悲しい', '辛い', '苦しい', '寂しい', '虚しい', '憂鬱',
     '嫌', '嫌い', '最悪', '最低', 'ムカつく', '腹立つ', '怒',
+    '泣', '涙', '落ち込', '凹', 'へこ', 'ショック',
     // 状態
     'うざい', 'きもい', 'だるい', '疲れた', 'しんどい', 'つらい',
-    'ダメ', '無理', '失敗', '困った', '不安', '心配',
+    'ダメ', '無理', '失敗', '困った', '不安', '心配', '怖い',
+    '眠い', '病', '痛', '具合悪', '調子悪',
     // 強い否定
-    '死', '消えろ', 'クソ', 'ゴミ', '地獄', '絶望',
+    '死', '消えろ', 'クソ', 'ゴミ', '地獄', '絶望', '終わ',
+    // 天気関連
+    '雨', '曇', '嵐', '雷', '暗', '寒',
     // 絵文字
-    '😢', '😭', '😡', '😠', '💢', '😰', '😱', '😞', '😔', '💔'
+    '😢', '😭', '😡', '😠', '💢', '😰', '😱', '😞', '😔', '💔', '☁️', '🌧️', '⛈️'
 ];
 
 export interface SentimentAnalysis {
@@ -73,8 +82,8 @@ export function analyzePostSentiment(content: string): SentimentAnalysis {
     });
 
     // Calculate Energy (ポジティブワードで上がり、ネガティブワードで下がる)
-    // Base: 0.5, +0.2 per positive word, -0.25 per negative word (倍率UP)
-    const energyRaw = 0.5 + (positiveCount * 0.2) - (negativeCount * 0.25);
+    // 一つの単語でも大きく影響するように倍率を大幅UP
+    const energyRaw = 0.5 + (positiveCount * 0.3) - (negativeCount * 0.35);
     const energy = Math.max(0, Math.min(1, energyRaw));
 
     // Calculate Flow (長ければフローが上がる)
@@ -91,20 +100,26 @@ export function analyzePostSentiment(content: string): SentimentAnalysis {
     flow = Math.min(flow + (exclamationCount * 0.1), 1.0);
     flow = Math.min(flow + (questionCount * 0.05), 1.0);
 
-    // Calculate Mood (0-100) - 倍率UP
+    // Calculate Mood (0-100) - 一つの単語でも大きく変化するように倍率を大幅UP
     const moodScore = Math.max(0, Math.min(100,
-        50 + (positiveCount * 15) - (negativeCount * 15)
+        50 + (positiveCount * 25) - (negativeCount * 25)
     ));
 
-    // Calculate sentiment ratios
+    // Calculate sentiment ratios - より敏感に
     const totalKeywords = positiveCount + negativeCount;
-    const positiveSentiment = totalKeywords > 0
-        ? Math.min(positiveCount / totalKeywords, 1.0)
-        : 0.5;
 
-    const negativeSentiment = totalKeywords > 0
-        ? Math.min(negativeCount / totalKeywords, 1.0)
-        : 0.0;
+    // 単語が1つでもあれば、その影響を強く反映
+    let positiveSentiment = 0.5; // デフォルト中立
+    let negativeSentiment = 0.0; // デフォルト中立
+
+    if (totalKeywords > 0) {
+        positiveSentiment = positiveCount / Math.max(totalKeywords, 1);
+        negativeSentiment = negativeCount / Math.max(totalKeywords, 1);
+    } else if (positiveCount > 0) {
+        positiveSentiment = 0.8; // ポジティブワードのみ
+    } else if (negativeCount > 0) {
+        negativeSentiment = 0.8; // ネガティブワードのみ
+    }
 
     return {
         energy,

@@ -100,70 +100,106 @@ export default function PostCard({ post }: PostCardProps) {
         const mood = userData.moodScore / 100; // 0-1
         const stress = Math.min(userData.reportCount / 10, 1); // 0-1
         const negativeSentiment = userData.negativeSentiment; // 0-1
+        const positiveSentiment = userData.positiveSentiment; // 0-1
 
-        // Weather conditions (adjusted for more variety)
-        // 晴れ (Sunny): mood > 0.7 AND stress < 0.3 (より厳しく)
-        // 曇り (Cloudy): mood 0.4-0.7 OR stress 0.3-0.6 (より広く)
-        // 雨 (Rainy): mood < 0.4 OR stress 0.6-0.75
-        // 雷雨 (Thunderstorm): stress > 0.75 OR (mood < 0.25 AND negativeSentiment > 0.4)
+        // より感度の高い天気判定
+        // 虹 (Rainbow): mood > 0.85 AND positiveSentiment > 0.7 AND stress < 0.15
+        // 快晴 (Clear Sky): mood > 0.7 AND positiveSentiment > 0.5 AND stress < 0.25
+        // 晴れ (Sunny): mood > 0.55 OR positiveSentiment > 0.4
+        // 曇り (Cloudy): mood 0.35-0.55
+        // 小雨 (Light Rain): mood < 0.35 OR negativeSentiment > 0.3
+        // 雨 (Rainy): mood < 0.25 OR negativeSentiment > 0.5 OR stress > 0.6
+        // 雷雨 (Thunderstorm): stress > 0.75 OR (mood < 0.15 AND negativeSentiment > 0.6)
 
-        let weather = 'cloudy'; // デフォルトを曇りに変更
+        let weather = 'cloudy';
 
-        if (stress > 0.75 || (mood < 0.25 && negativeSentiment > 0.4)) {
+        if (stress > 0.75 || (mood < 0.15 && negativeSentiment > 0.6)) {
             weather = 'thunderstorm';
-        } else if (mood < 0.4 || stress > 0.6) {
+        } else if (mood < 0.25 || negativeSentiment > 0.5 || stress > 0.6) {
             weather = 'rainy';
-        } else if (mood > 0.7 && stress < 0.3) {
-            weather = 'sunny'; // 晴れは高い気分が必要
+        } else if (mood < 0.35 || negativeSentiment > 0.3) {
+            weather = 'lightRain';
+        } else if (mood > 0.85 && positiveSentiment > 0.7 && stress < 0.15) {
+            weather = 'rainbow';
+        } else if (mood > 0.7 && positiveSentiment > 0.5 && stress < 0.25) {
+            weather = 'clearSky';
+        } else if (mood > 0.55 || positiveSentiment > 0.4) {
+            weather = 'sunny';
         }
-        // それ以外は曇り
 
-        return { mood, stress, weather };
+        return { mood, stress, weather, positiveSentiment };
     };
 
     const getStatusBackgroundStyle = () => {
         const { mood, stress, weather } = getWeatherState();
 
-        // Sky color based on weather
-        let skyColor1, skyColor2;
+        // Sky color based on weather - より鮮やかで美しい色に
+        let skyColor1, skyColor2, skyColor3;
 
         switch (weather) {
+            case 'rainbow':
+                // 虹色の空 - 最高に美しい
+                skyColor1 = 'hsl(200, 100%, 85%)';
+                skyColor2 = 'hsl(280, 80%, 75%)';
+                skyColor3 = 'hsl(340, 90%, 80%)';
+                break;
+            case 'clearSky':
+                // 快晴 - 深く鮮やかな青空
+                skyColor1 = 'hsl(200, 100%, 75%)';
+                skyColor2 = 'hsl(210, 95%, 65%)';
+                skyColor3 = 'hsl(220, 90%, 60%)';
+                break;
             case 'sunny':
-                // Bright blue sky
-                skyColor1 = 'hsl(200, 80%, 75%)';
-                skyColor2 = 'hsl(200, 70%, 65%)';
+                // 晴れ - 明るく爽やかな青空
+                skyColor1 = 'hsl(195, 90%, 70%)';
+                skyColor2 = 'hsl(205, 85%, 60%)';
+                skyColor3 = 'hsl(215, 80%, 55%)';
                 break;
             case 'cloudy':
-                // Gray-blue sky
-                skyColor1 = 'hsl(200, 40%, 60%)';
-                skyColor2 = 'hsl(200, 35%, 50%)';
+                // 曇り - グレーがかった空
+                skyColor1 = 'hsl(200, 35%, 65%)';
+                skyColor2 = 'hsl(200, 30%, 55%)';
+                skyColor3 = 'hsl(200, 25%, 50%)';
+                break;
+            case 'lightRain':
+                // 小雨 - 暗めのグレー
+                skyColor1 = 'hsl(200, 25%, 50%)';
+                skyColor2 = 'hsl(200, 20%, 40%)';
+                skyColor3 = 'hsl(200, 18%, 35%)';
                 break;
             case 'rainy':
-                // Dark gray sky
-                skyColor1 = 'hsl(200, 30%, 45%)';
-                skyColor2 = 'hsl(200, 25%, 35%)';
+                // 雨 - ダークグレー
+                skyColor1 = 'hsl(200, 20%, 40%)';
+                skyColor2 = 'hsl(200, 18%, 30%)';
+                skyColor3 = 'hsl(200, 15%, 25%)';
                 break;
             case 'thunderstorm':
-                // Very dark, stormy sky
-                skyColor1 = 'hsl(200, 20%, 30%)';
-                skyColor2 = 'hsl(200, 15%, 20%)';
+                // 雷雨 - 非常に暗い嵐の空
+                skyColor1 = 'hsl(200, 15%, 25%)';
+                skyColor2 = 'hsl(200, 12%, 18%)';
+                skyColor3 = 'hsl(200, 10%, 15%)';
                 break;
             default:
                 skyColor1 = 'hsl(200, 60%, 70%)';
                 skyColor2 = 'hsl(200, 50%, 60%)';
+                skyColor3 = 'hsl(200, 40%, 50%)';
         }
 
         // Cloud coverage
-        const cloudOpacity = weather === 'sunny' ? 0.1 :
-            weather === 'cloudy' ? 0.5 :
-                weather === 'rainy' ? 0.7 : 0.85;
+        const cloudOpacity = weather === 'rainbow' ? 0.05 :
+            weather === 'clearSky' ? 0.1 :
+                weather === 'sunny' ? 0.2 :
+                    weather === 'cloudy' ? 0.5 :
+                        weather === 'lightRain' ? 0.65 :
+                            weather === 'rainy' ? 0.75 : 0.85;
 
         return {
             background: `
                 linear-gradient(
                     to bottom,
-                    ${skyColor1},
-                    ${skyColor2}
+                    ${skyColor1} 0%,
+                    ${skyColor2} 50%,
+                    ${skyColor3} 100%
                 ),
                 radial-gradient(
                     ellipse at top,
@@ -196,26 +232,69 @@ export default function PostCard({ post }: PostCardProps) {
                 className={styles.statusBackground}
                 style={getStatusBackgroundStyle()}
             >
-                {/* Sun for sunny weather */}
-                {getWeatherState().weather === 'sunny' && (
-                    <div className={styles.sun} />
+                {/* Rainbow for very positive mood */}
+                {(getWeatherState().weather === 'rainbow') && (
+                    <div className={styles.rainbowGradient} />
                 )}
 
-                {/* Flower field for sunny weather */}
-                {getWeatherState().weather === 'sunny' && (
-                    <div className={styles.flowerField}>
-                        {[...Array(15)].map((_, i) => (
+                {/* Sun for sunny/clear weather */}
+                {(getWeatherState().weather === 'sunny' ||
+                    getWeatherState().weather === 'clearSky' ||
+                    getWeatherState().weather === 'rainbow') && (
+                        <div className={styles.sun} />
+                    )}
+
+                {/* Flower field for very positive weather */}
+                {(getWeatherState().weather === 'rainbow' ||
+                    getWeatherState().weather === 'clearSky') && (
+                        <div className={styles.flowerField}>
+                            {[...Array(20)].map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={styles.flower}
+                                    style={{
+                                        left: `${5 + (i * 4.5)}%`,
+                                        bottom: `${Math.random() * 20}%`,
+                                        animationDelay: `${Math.random() * 2}s`
+                                    }}
+                                >
+                                    {['🌸', '🌺', '🌼', '🌻', '🌷'][Math.floor(Math.random() * 5)]}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                {/* Wind effect for cloudy/light rain */}
+                {(getWeatherState().weather === 'cloudy' ||
+                    getWeatherState().weather === 'lightRain') && (
+                        <div className={styles.windEffect}>
+                            {[...Array(8)].map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={styles.windLine}
+                                    style={{
+                                        top: `${10 + (i * 12)}%`,
+                                        animationDelay: `${Math.random() * 3}s`
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                {/* Light rain effect */}
+                {getWeatherState().weather === 'lightRain' && (
+                    <div className={styles.rainEffect}>
+                        {[...Array(12)].map((_, i) => (
                             <div
                                 key={i}
-                                className={styles.flower}
+                                className={styles.rainDrop}
                                 style={{
-                                    left: `${5 + (i * 6)}%`,
-                                    bottom: `${Math.random() * 15}%`,
-                                    animationDelay: `${Math.random() * 2}s`
+                                    left: `${Math.random() * 100}%`,
+                                    animationDelay: `${Math.random() * 2}s`,
+                                    animationDuration: `${0.8 + Math.random() * 0.4}s`,
+                                    opacity: 0.4
                                 }}
-                            >
-                                🌸
-                            </div>
+                            />
                         ))}
                     </div>
                 )}
@@ -223,14 +302,14 @@ export default function PostCard({ post }: PostCardProps) {
                 {/* Rain effect for rainy/thunderstorm weather */}
                 {(getWeatherState().weather === 'rainy' || getWeatherState().weather === 'thunderstorm') && (
                     <div className={styles.rainEffect}>
-                        {[...Array(getWeatherState().weather === 'thunderstorm' ? 30 : 20)].map((_, i) => (
+                        {[...Array(getWeatherState().weather === 'thunderstorm' ? 35 : 25)].map((_, i) => (
                             <div
                                 key={i}
                                 className={styles.rainDrop}
                                 style={{
                                     left: `${Math.random() * 100}%`,
                                     animationDelay: `${Math.random() * 2}s`,
-                                    animationDuration: `${0.5 + Math.random() * 0.5}s`
+                                    animationDuration: `${0.4 + Math.random() * 0.3}s`
                                 }}
                             />
                         ))}

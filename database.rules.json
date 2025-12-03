@@ -1,0 +1,44 @@
+{
+    "rules": {
+        "threads": {
+            ".read": true,
+            ".write": "auth != null",
+            ".indexOn": [
+                "timestamp"
+            ]
+        },
+        "conversations": {
+            "$conversationId": {
+                ".read": "auth != null && $conversationId.contains(auth.uid)",
+                ".write": "auth != null && $conversationId.contains(auth.uid)",
+                "messages": {
+                    ".indexOn": [
+                        "timestamp"
+                    ]
+                }
+            }
+        },
+        "rooms": {
+            "$roomId": {
+                "participants": {
+                    ".read": "auth != null",
+                    "$uid": {
+                        ".write": "auth != null && auth.uid === $uid"
+                    }
+                },
+                "signals": {
+                    ".read": "auth != null",
+                    "$signalId": {
+                        ".write": "auth != null && newData.child('from').val() === auth.uid"
+                    }
+                }
+            }
+        },
+        "users": {
+            "$uid": {
+                ".read": true,
+                ".write": "auth != null && auth.uid === $uid"
+            }
+        }
+    }
+}
