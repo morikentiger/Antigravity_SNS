@@ -31,10 +31,9 @@ export default function ConversationList() {
 
         // Load user's conversations
         const conversationsRef = ref(database, 'conversations');
+
         const unsubscribeConversations = onValue(conversationsRef, async (snapshot) => {
             const data = snapshot.val();
-            console.log('Conversations data:', data);
-            console.log('Current user UID:', user.uid);
 
             if (data) {
                 const conversationsArray: Conversation[] = [];
@@ -42,7 +41,6 @@ export default function ConversationList() {
                 for (const [conversationId, conversation] of Object.entries(data) as [string, any][]) {
                     // conversationId is formatted as "userId1_userId2" (sorted)
                     const userIds = conversationId.split('_');
-                    console.log('Checking conversation:', conversationId, 'userIds:', userIds, 'includes user:', userIds.includes(user.uid));
 
                     // Check if current user is part of this conversation
                     if (!userIds.includes(user.uid)) continue;
@@ -67,7 +65,13 @@ export default function ConversationList() {
                         console.error('Error fetching user:', error);
                     }
 
-                    // If not found in users, try to get from messages in the conversation
+                    // If not found in users, try to get from conversation's userInfo
+                    if (otherUserName === 'Unknown User' && conversation.userInfo?.[otherUserId]) {
+                        otherUserName = conversation.userInfo[otherUserId].displayName || 'Unknown User';
+                        otherUserAvatar = conversation.userInfo[otherUserId].photoURL || '';
+                    }
+
+                    // If still not found, try to get from messages in the conversation
                     if (otherUserName === 'Unknown User' && conversation.messages) {
                         const messages = Object.values(conversation.messages) as any[];
                         const otherUserMessage = messages.find(
@@ -106,6 +110,8 @@ export default function ConversationList() {
             } else {
                 setConversations([]);
             }
+        }, (error) => {
+            console.error('Firebase error loading conversations:', error);
         });
 
         return () => {

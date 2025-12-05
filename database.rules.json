@@ -8,8 +8,8 @@
             ]
         },
         "conversations": {
+            ".read": "auth != null",
             "$conversationId": {
-                ".read": "auth != null && $conversationId.contains(auth.uid)",
                 ".write": "auth != null && $conversationId.contains(auth.uid)",
                 "messages": {
                     ".indexOn": [

@@ -16,6 +16,8 @@ interface ReplyTo {
 interface MessageInputProps {
     conversationId: string;
     otherUserId: string;
+    otherUserName?: string;
+    otherUserAvatar?: string;
     replyingTo?: { id: string; content: string; senderName: string } | null;
     onCancelReply?: () => void;
     onMessageSent?: () => void;
@@ -24,6 +26,8 @@ interface MessageInputProps {
 export default function MessageInput({
     conversationId,
     otherUserId,
+    otherUserName,
+    otherUserAvatar,
     replyingTo,
     onCancelReply,
     onMessageSent,
@@ -71,13 +75,26 @@ export default function MessageInput({
 
             // Update conversation metadata (use update instead of set to avoid overwriting messages)
             const conversationRef = ref(database, `conversations/${conversationId}`);
-            await update(conversationRef, {
+            const updateData: any = {
                 [`participants/${user.uid}`]: true,
                 [`participants/${otherUserId}`]: true,
                 lastMessage: message.trim(),
                 lastMessageTime: serverTimestamp(),
                 lastMessageSender: user.uid,
-            });
+                // Store user info for display
+                [`userInfo/${user.uid}`]: {
+                    displayName: user.displayName || 'Anonymous',
+                    photoURL: user.photoURL || '',
+                },
+            };
+            // Store other user info if available
+            if (otherUserName) {
+                updateData[`userInfo/${otherUserId}`] = {
+                    displayName: otherUserName,
+                    photoURL: otherUserAvatar || '',
+                };
+            }
+            await update(conversationRef, updateData);
 
             setMessage('');
             onMessageSent?.();

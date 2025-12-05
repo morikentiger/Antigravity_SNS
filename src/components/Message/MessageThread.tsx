@@ -203,6 +203,8 @@ export default function MessageThread({
             <MessageInput
                 conversationId={conversationId}
                 otherUserId={otherUserId}
+                otherUserName={otherUserName}
+                otherUserAvatar={otherUserAvatar}
                 replyingTo={replyingTo}
                 onCancelReply={handleCancelReply}
                 onMessageSent={handleMessageSent}
