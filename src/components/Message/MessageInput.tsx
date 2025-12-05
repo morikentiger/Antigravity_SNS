@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ref, push, serverTimestamp, set } from 'firebase/database';
+import { ref, push, serverTimestamp, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Button from '@/components/common/Button';
@@ -69,13 +69,11 @@ export default function MessageInput({
 
             await push(messagesRef, messageData);
 
-            // Update conversation metadata
+            // Update conversation metadata (use update instead of set to avoid overwriting messages)
             const conversationRef = ref(database, `conversations/${conversationId}`);
-            await set(conversationRef, {
-                participants: {
-                    [user.uid]: true,
-                    [otherUserId]: true,
-                },
+            await update(conversationRef, {
+                [`participants/${user.uid}`]: true,
+                [`participants/${otherUserId}`]: true,
                 lastMessage: message.trim(),
                 lastMessageTime: serverTimestamp(),
                 lastMessageSender: user.uid,
