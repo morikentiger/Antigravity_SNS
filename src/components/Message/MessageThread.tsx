@@ -42,36 +42,13 @@ export default function MessageThread({
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const conversationId = [user?.uid, otherUserId].sort().join('_');
 
-    // Mark messages as read
-    const markMessagesAsRead = useCallback(async (messagesToMark: Message[]) => {
-        if (!user) return;
-
-        const now = Date.now();
-        const updates: { [key: string]: number } = {};
-
-        messagesToMark.forEach((message) => {
-            // Only mark messages from others that haven't been read by current user
-            if (message.senderId !== user.uid && !message.readBy?.[user.uid]) {
-                updates[`conversations/${conversationId}/messages/${message.id}/readBy/${user.uid}`] = now;
-            }
-        });
-
-        if (Object.keys(updates).length > 0) {
-            try {
-                await update(ref(database), updates);
-            } catch (error) {
-                console.error('Error marking messages as read:', error);
-            }
-        }
-    }, [user, conversationId]);
-
     useEffect(() => {
         if (!user) return;
 
         const messagesRef = ref(database, `conversations/${conversationId}/messages`);
         const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(100));
 
-        const unsubscribe = onValue(messagesQuery, (snapshot) => {
+        const unsubscribe = onValue(messagesQuery, async (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 const messagesArray: Message[] = Object.entries(data).map(
@@ -82,15 +59,32 @@ export default function MessageThread({
                 );
                 messagesArray.sort((a, b) => a.timestamp - b.timestamp);
                 setMessages(messagesArray);
-                // Mark messages as read when they are loaded/updated
-                markMessagesAsRead(messagesArray);
+
+                // Mark unread messages as read (only once per message)
+                const now = Date.now();
+                const updates: { [key: string]: number } = {};
+
+                messagesArray.forEach((message) => {
+                    // Only mark messages from others that haven't been read by current user
+                    if (message.senderId !== user.uid && !message.readBy?.[user.uid]) {
+                        updates[`conversations/${conversationId}/messages/${message.id}/readBy/${user.uid}`] = now;
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    try {
+                        await update(ref(database), updates);
+                    } catch (error) {
+                        console.error('Error marking messages as read:', error);
+                    }
+                }
             } else {
                 setMessages([]);
             }
         });
 
         return () => unsubscribe();
-    }, [user, conversationId, markMessagesAsRead]);
+    }, [user, conversationId]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
