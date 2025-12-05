@@ -18,6 +18,7 @@ interface Post {
     likedBy: { [key: string]: boolean };
     replyCount?: number;
     lastReplyTime?: number;
+    imageUrl?: string;
 }
 
 export default function PostFeed() {
@@ -46,6 +47,7 @@ export default function PostFeed() {
                         likedBy: post.likedBy || {},
                         replyCount: post.replyCount || 0,
                         lastReplyTime: post.lastReplyTime,
+                        imageUrl: post.imageUrl || null,
                     }))
                     .sort((a, b) => {
                         // 最終返信時刻でソート（返信があればそれを、なければ作成時刻を使う）
