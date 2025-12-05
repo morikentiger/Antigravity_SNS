@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ref, onValue, push, serverTimestamp, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
-import Avatar from '@/components/common/Avatar';
+import UserProfilePopup from '@/components/common/UserProfilePopup';
 import Button from '@/components/common/Button';
 import { Linkify } from '@/components/common/Linkify';
 import Navbar from '@/components/Navbar';
@@ -173,7 +173,13 @@ export default function ThreadDetailPage() {
                 <div className={styles.threadMain}>
                     <h1 className={styles.threadTitle}>{thread.title}</h1>
                     <div className={styles.threadHeader}>
-                        <Avatar src={thread.userAvatar} alt={thread.userName} size="md" />
+                        <UserProfilePopup
+                            userId={thread.userId}
+                            userName={thread.userName}
+                            userAvatar={thread.userAvatar}
+                            size="md"
+                            currentUserId={user?.uid}
+                        />
                         <div>
                             <p className={styles.userName}>{thread.userName}</p>
                             <p className={styles.timestamp}>{formatTime(thread.timestamp)}</p>
@@ -197,7 +203,13 @@ export default function ThreadDetailPage() {
                     {replies.map((reply) => (
                         <div key={reply.id} className={styles.reply}>
                             <div className={styles.replyHeader}>
-                                <Avatar src={reply.userAvatar} alt={reply.userName} size="sm" />
+                                <UserProfilePopup
+                                    userId={reply.userId}
+                                    userName={reply.userName}
+                                    userAvatar={reply.userAvatar}
+                                    size="sm"
+                                    currentUserId={user?.uid}
+                                />
                                 <div>
                                     <p className={styles.replyUserName}>{reply.userName}</p>
                                     <p className={styles.replyTimestamp}>{formatTime(reply.timestamp)}</p>

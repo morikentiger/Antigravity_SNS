@@ -1,9 +1,66 @@
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--glass-border);
+    background: var(--color-bg-secondary);
+}
+
+/* Reply preview */
+.replyPreview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(139, 92, 246, 0.05);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.replyPreviewContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.replyPreviewLabel {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.replyPreviewText {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.replyPreviewCancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.replyPreviewCancel:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
 .form {
     display: flex;
     gap: var(--space-md);
     padding: var(--space-lg);
-    border-top: 1px solid var(--glass-border);
-    background: var(--color-bg-secondary);
     align-items: flex-end;
 }
 

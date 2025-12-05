@@ -57,7 +57,7 @@
 .messageWrapper {
     display: flex;
     gap: var(--space-sm);
-    align-items: flex-end;
+    align-items: flex-start;
     animation: fadeIn 0.3s ease;
 }
 
@@ -65,8 +65,44 @@
     flex-direction: row-reverse;
 }
 
-.messageBubble {
+.messageContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     max-width: 70%;
+    position: relative;
+}
+
+.own .messageContainer {
+    align-items: flex-end;
+}
+
+/* Reply reference display */
+.replyReference {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 10px;
+    background: rgba(139, 92, 246, 0.1);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+}
+
+.replyToName {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.replyToContent {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.messageBubble {
     padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius-lg);
     background: var(--color-bg-tertiary);
@@ -79,10 +115,17 @@
 }
 
 .messageContent {
-    margin: 0 0 var(--space-xs) 0;
+    margin: 0;
     color: var(--color-text-primary);
     line-height: 1.5;
     word-wrap: break-word;
+}
+
+.messageFooter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .messageTime {
@@ -94,8 +137,60 @@
     color: rgba(255, 255, 255, 0.7);
 }
 
+/* Read status */
+.readStatus {
+    font-size: 0.7rem;
+    color: #10b981;
+    font-weight: 500;
+}
+
+.own .readStatus {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Reply button */
+.replyButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.messageWrapper:hover .replyButton {
+    opacity: 1;
+}
+
+.replyButton:hover {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--color-primary);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 768px) {
-    .messageBubble {
+    .messageContainer {
         max-width: 85%;
+    }
+
+    .replyButton {
+        opacity: 1;
     }
 }
