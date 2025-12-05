@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -16,64 +16,105 @@ interface Conversation {
     otherUserAvatar: string;
     lastMessage: string;
     lastMessageTime: number;
-    unread: boolean;
+    unreadCount: number;
+    lastMessageSender: string;
 }
 
 export default function ConversationList() {
     const { user } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [users, setUsers] = useState<any>({});
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         if (!user) return;
 
-        // Load all users for starting new conversations
-        const usersRef = ref(database, 'users');
-        const unsubscribeUsers = onValue(usersRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                setUsers(data);
-            }
-        });
-
         // Load user's conversations
         const conversationsRef = ref(database, 'conversations');
-        const unsubscribeConversations = onValue(conversationsRef, (snapshot) => {
+        const unsubscribeConversations = onValue(conversationsRef, async (snapshot) => {
             const data = snapshot.val();
+            console.log('Conversations data:', data);
+            console.log('Current user UID:', user.uid);
+
             if (data) {
                 const conversationsArray: Conversation[] = [];
-                Object.entries(data).forEach(([id, conversation]: [string, any]) => {
-                    if (conversation.participants?.[user.uid]) {
-                        const otherUserId = Object.keys(conversation.participants).find(
-                            (uid) => uid !== user.uid
+
+                for (const [conversationId, conversation] of Object.entries(data) as [string, any][]) {
+                    // conversationId is formatted as "userId1_userId2" (sorted)
+                    const userIds = conversationId.split('_');
+                    console.log('Checking conversation:', conversationId, 'userIds:', userIds, 'includes user:', userIds.includes(user.uid));
+
+                    // Check if current user is part of this conversation
+                    if (!userIds.includes(user.uid)) continue;
+
+                    const otherUserId = userIds.find((uid) => uid !== user.uid);
+                    if (!otherUserId) continue;
+
+                    // Get other user's info
+                    let otherUserName = 'Unknown User';
+                    let otherUserAvatar = '';
+
+                    // Try to get from users node first
+                    try {
+                        const userRef = ref(database, `users/${otherUserId}`);
+                        const userSnapshot = await get(userRef);
+                        if (userSnapshot.exists()) {
+                            const userData = userSnapshot.val();
+                            otherUserName = userData.displayName || 'Unknown User';
+                            otherUserAvatar = userData.photoURL || '';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching user:', error);
+                    }
+
+                    // If not found in users, try to get from messages in the conversation
+                    if (otherUserName === 'Unknown User' && conversation.messages) {
+                        const messages = Object.values(conversation.messages) as any[];
+                        const otherUserMessage = messages.find(
+                            (msg: any) => msg.senderId === otherUserId
                         );
-                        if (otherUserId && users[otherUserId]) {
-                            conversationsArray.push({
-                                id,
-                                otherUserId,
-                                otherUserName: users[otherUserId].displayName || 'Unknown User',
-                                otherUserAvatar: users[otherUserId].photoURL || '',
-                                lastMessage: conversation.lastMessage || '',
-                                lastMessageTime: conversation.lastMessageTime || 0,
-                                unread: conversation.lastMessageSender !== user.uid,
-                            });
+                        if (otherUserMessage) {
+                            otherUserName = otherUserMessage.senderName || 'Unknown User';
+                            otherUserAvatar = otherUserMessage.senderAvatar || '';
                         }
                     }
-                });
+
+                    // Count unread messages
+                    let unreadCount = 0;
+                    if (conversation.messages) {
+                        Object.values(conversation.messages).forEach((msg: any) => {
+                            if (msg.senderId !== user.uid && !msg.readBy?.[user.uid]) {
+                                unreadCount++;
+                            }
+                        });
+                    }
+
+                    conversationsArray.push({
+                        id: conversationId,
+                        otherUserId,
+                        otherUserName,
+                        otherUserAvatar,
+                        lastMessage: conversation.lastMessage || '',
+                        lastMessageTime: conversation.lastMessageTime || 0,
+                        unreadCount,
+                        lastMessageSender: conversation.lastMessageSender || '',
+                    });
+                }
+
                 conversationsArray.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
                 setConversations(conversationsArray);
+            } else {
+                setConversations([]);
             }
         });
 
         return () => {
-            unsubscribeUsers();
             unsubscribeConversations();
         };
-    }, [user, users]);
+    }, [user]);
 
     const formatTime = (timestamp: number) => {
+        if (!timestamp) return '';
         const now = Date.now();
         const diff = now - timestamp;
         const minutes = Math.floor(diff / 60000);
@@ -87,7 +128,11 @@ export default function ConversationList() {
     };
 
     const handleConversationClick = (conversation: Conversation) => {
-        router.push(`/messages/${conversation.otherUserId}`);
+        const params = new URLSearchParams({
+            name: conversation.otherUserName,
+            avatar: conversation.otherUserAvatar || '',
+        });
+        router.push(`/messages/${conversation.otherUserId}?${params.toString()}`);
     };
 
     return (
@@ -122,7 +167,7 @@ export default function ConversationList() {
                         <div
                             key={conversation.id}
                             onClick={() => handleConversationClick(conversation)}
-                            className={`${styles.item} ${conversation.unread ? styles.unread : ''}`}
+                            className={`${styles.item} ${conversation.unreadCount > 0 ? styles.unread : ''}`}
                         >
                             <Avatar
                                 src={conversation.otherUserAvatar}
@@ -138,7 +183,11 @@ export default function ConversationList() {
                                 </div>
                                 <p className={styles.lastMessage}>{conversation.lastMessage}</p>
                             </div>
-                            {conversation.unread && <div className={styles.unreadDot} />}
+                            {conversation.unreadCount > 0 && (
+                                <div className={styles.unreadBadge}>
+                                    {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

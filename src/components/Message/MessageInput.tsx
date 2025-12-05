@@ -88,8 +88,10 @@ export default function MessageInput({
         }
     };
 
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        // IME変換中はEnterで送信しない
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
             handleSubmit(e);
         }
