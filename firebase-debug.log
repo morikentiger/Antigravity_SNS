@@ -1,0 +1,278 @@
+[debug] [2025-12-06T17:16:26.787Z] ----------------------------------------------------------------------
+[debug] [2025-12-06T17:16:26.789Z] Command:       /opt/homebrew/Cellar/node/25.1.0_1/bin/node /opt/homebrew/bin/firebase deploy --only functions
+[debug] [2025-12-06T17:16:26.789Z] CLI Version:   14.27.0
+[debug] [2025-12-06T17:16:26.790Z] Platform:      darwin
+[debug] [2025-12-06T17:16:26.790Z] Node Version:  v25.1.0
+[debug] [2025-12-06T17:16:26.790Z] Time:          Sun Dec 07 2025 02:16:26 GMT+0900 (Japan Standard Time)
+[debug] [2025-12-06T17:16:26.790Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-06T17:16:26.896Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-06T17:16:26.896Z] > authorizing via signed-in user (kenblacksword339@gmail.com)
+[debug] [2025-12-06T17:16:26.896Z] [iam] checking project antigravity339 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-12-06T17:16:26.898Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:26.898Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:26.898Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions [none]
+[debug] [2025-12-06T17:16:26.898Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:26.899Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-12-06T17:16:27.548Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions 200
+[debug] [2025-12-06T17:16:27.548Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-12-06T17:16:27.549Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:27.549Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:27.549Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-12-06T17:16:27.549Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-12-06T17:16:28.411Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions 404
+[debug] [2025-12-06T17:16:28.411Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions {"error":{"code":404,"message":"Unknown service account","status":"NOT_FOUND"}}
+[debug] [2025-12-06T17:16:28.412Z] [functions] service account IAM check errored, deploy may fail: Request to https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions had HTTP Error: 404, Unknown service account {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":404,"message":"Unknown service account","status":"NOT_FOUND"}},"response":{"statusCode":404}},"exit":1,"message":"Request to https://iam.googleapis.com/v1/projects/antigravity339/serviceAccounts/antigravity339@appspot.gserviceaccount.com:testIamPermissions had HTTP Error: 404, Unknown service account","status":404}
+[info] 
+[info] === Deploying to 'antigravity339'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run lint
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] ✔  functions: Finished running predeploy script. 
+[debug] [2025-12-06T17:16:36.544Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:36.544Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:36.544Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2025-12-06T17:16:36.544Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:37.473Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudresourcemanager.googleapis.com 200
+[debug] [2025-12-06T17:16:37.473Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2025-12-06T17:16:37.481Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:37.481Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:37.481Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 [none]
+[debug] [2025-12-06T17:16:37.718Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 200
+[debug] [2025-12-06T17:16:37.718Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 {"projectNumber":"60264793176","projectId":"antigravity339","lifecycleState":"ACTIVE","name":"Antigravity339","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-11-27T12:45:40.818568Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[debug] [2025-12-06T17:16:37.719Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:37.719Z] Checked if tokens are valid: true, expires at: 1765044754730
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-12-06T17:16:37.719Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:37.719Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:37.719Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com [none]
+[debug] [2025-12-06T17:16:37.719Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:37.719Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com [none]
+[debug] [2025-12-06T17:16:37.719Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:38.619Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com 200
+[debug] [2025-12-06T17:16:38.619Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com [omitted]
+[warn] ⚠  functions: missing required API cloudbuild.googleapis.com. Enabling now... 
+[debug] [2025-12-06T17:16:38.619Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:38.619Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:38.619Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com:enable [none]
+[debug] [2025-12-06T17:16:38.619Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com:enable x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:38.957Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com 200
+[debug] [2025-12-06T17:16:38.957Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com [omitted]
+[warn] ⚠  artifactregistry: missing required API artifactregistry.googleapis.com. Enabling now... 
+[debug] [2025-12-06T17:16:38.958Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:38.958Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:38.958Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com:enable [none]
+[debug] [2025-12-06T17:16:38.958Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com:enable x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:39.107Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com:enable 200
+[debug] [2025-12-06T17:16:39.107Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/cloudbuild.googleapis.com:enable [omitted]
+[debug] [2025-12-06T17:16:40.109Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com:enable 200
+[debug] [2025-12-06T17:16:40.109Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/artifactregistry.googleapis.com:enable [omitted]
+[debug] [2025-12-06T17:16:50.117Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:50.118Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:50.118Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/antigravity339/adminSdkConfig [none]
+[debug] [2025-12-06T17:16:50.757Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/antigravity339/adminSdkConfig 200
+[debug] [2025-12-06T17:16:50.757Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/antigravity339/adminSdkConfig {"projectId":"antigravity339","databaseURL":"https://antigravity339-default-rtdb.firebaseio.com","storageBucket":"antigravity339.firebasestorage.app"}
+[debug] [2025-12-06T17:16:50.759Z] Validating nodejs source
+[debug] [2025-12-06T17:16:51.202Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.4.1",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[debug] [2025-12-06T17:16:51.202Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-12-06T17:16:51.203Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-12-06T17:16:51.212Z] Found firebase-functions binary at '/Users/moritakenta/Workspace/projects/Antigravity/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8854
+
+[debug] [2025-12-06T17:16:51.981Z] Got response from /__/functions.yaml {"endpoints":{"sendMessageNotification":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"eventTrigger":{"eventType":"providers/google.firebase.database/eventTypes/ref.create","eventFilters":{"resource":"projects/_/instances/antigravity339-default-rtdb/refs/conversations/{conversationId}/messages/{messageId}"},"retry":false},"labels":{},"entryPoint":"sendMessageNotification"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2025-12-06T17:16:55.996Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:55.996Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:55.996Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com [none]
+[debug] [2025-12-06T17:16:55.996Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:57.187Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com 200
+[debug] [2025-12-06T17:16:57.187Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com [omitted]
+[warn] ⚠  extensions: missing required API firebaseextensions.googleapis.com. Enabling now... 
+[debug] [2025-12-06T17:16:57.187Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:57.187Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:16:57.187Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com:enable [none]
+[debug] [2025-12-06T17:16:57.187Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com:enable x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:16:58.192Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com:enable 200
+[debug] [2025-12-06T17:16:58.192Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/antigravity339/services/firebaseextensions.googleapis.com:enable [omitted]
+[debug] [2025-12-06T17:17:08.204Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-06T17:17:08.205Z] > authorizing via signed-in user (kenblacksword339@gmail.com)
+[debug] [2025-12-06T17:17:08.205Z] [iam] checking project antigravity339 for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2025-12-06T17:17:08.205Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:08.205Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:08.205Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions [none]
+[debug] [2025-12-06T17:17:08.205Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions x-goog-quota-user=projects/antigravity339
+[debug] [2025-12-06T17:17:08.205Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-12-06T17:17:08.836Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions 200
+[debug] [2025-12-06T17:17:08.836Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2025-12-06T17:17:08.837Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:08.837Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:08.837Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/antigravity339/instances pageSize=100&pageToken=
+[debug] [2025-12-06T17:17:11.042Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/antigravity339/instances 200
+[debug] [2025-12-06T17:17:11.042Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/antigravity339/instances {}
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged /Users/moritakenta/Workspace/projects/Antigravity/functions (98.99 KB) for uploading 
+[debug] [2025-12-06T17:17:11.095Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:11.096Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:11.096Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/-/functions [none]
+[debug] [2025-12-06T17:17:12.011Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/-/functions 200
+[debug] [2025-12-06T17:17:12.012Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/-/functions {}
+[debug] [2025-12-06T17:17:12.012Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:12.012Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:12.012Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/antigravity339/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2025-12-06T17:17:13.327Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/antigravity339/locations/-/functions 200
+[debug] [2025-12-06T17:17:13.328Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/antigravity339/locations/-/functions {}
+[debug] [2025-12-06T17:17:13.329Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:13.329Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:13.329Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 [none]
+[debug] [2025-12-06T17:17:13.509Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 200
+[debug] [2025-12-06T17:17:13.509Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/antigravity339 {"projectNumber":"60264793176","projectId":"antigravity339","lifecycleState":"ACTIVE","name":"Antigravity339","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-11-27T12:45:40.818568Z"}
+[debug] [2025-12-06T17:17:13.510Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:13.510Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:13.510Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/antigravity339/billingInfo [none]
+[debug] [2025-12-06T17:17:14.645Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/antigravity339/billingInfo 200
+[debug] [2025-12-06T17:17:14.645Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/antigravity339/billingInfo {"name":"projects/antigravity339/billingInfo","projectId":"antigravity339","billingAccountName":"billingAccounts/01F87D-E544D0-56B21C","billingEnabled":true}
+[debug] [2025-12-06T17:17:14.645Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:14.645Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:14.645Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2025-12-06T17:17:14.645Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions:generateUploadUrl {}
+[debug] [2025-12-06T17:17:36.076Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2025-12-06T17:17:36.076Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip?GoogleAccessId=service-60264793176@gcf-admin-robot.iam.gserviceaccount.com&Expires=1765043255&Signature=UII6jdkpQlWcBhSxt70flvCOjxrPn94di2uq6YCzVFyX7JetvPdU4aWasVXf0ZBPykcgsJht2%2BhgX0IAd0MicVsQ6Izcvy9GyJFWrqLlmUQgoEAorZl0Zn8aNZy9%2Faj2fDi18u%2FmsBGmg4u59NkztarkqR8URLuif7mukNqVO1W%2BxlCYKsuWFvf3ZKGEelWe6a8cvf4VSnKOvjk4nHlC4%2FfxqTYNneK84CF3kl%2BFMHyUK7ZN3hsX2dqZB6QzkJ%2FDEygek914JP4laIfd0%2BTvds5H5ud4nE%2FrUsUJuxazyLUsyNnFyCLI9o57C45XLoOzxWlHuWMmW1vreRp3scRZsw%3D%3D"}
+[debug] [2025-12-06T17:17:36.078Z] >>> [apiv2][query] PUT https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip GoogleAccessId=service-60264793176%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1765043255&Signature=UII6jdkpQlWcBhSxt70flvCOjxrPn94di2uq6YCzVFyX7JetvPdU4aWasVXf0ZBPykcgsJht2%2BhgX0IAd0MicVsQ6Izcvy9GyJFWrqLlmUQgoEAorZl0Zn8aNZy9%2Faj2fDi18u%2FmsBGmg4u59NkztarkqR8URLuif7mukNqVO1W%2BxlCYKsuWFvf3ZKGEelWe6a8cvf4VSnKOvjk4nHlC4%2FfxqTYNneK84CF3kl%2BFMHyUK7ZN3hsX2dqZB6QzkJ%2FDEygek914JP4laIfd0%2BTvds5H5ud4nE%2FrUsUJuxazyLUsyNnFyCLI9o57C45XLoOzxWlHuWMmW1vreRp3scRZsw%3D%3D
+[debug] [2025-12-06T17:17:36.079Z] >>> [apiv2][body] PUT https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip [stream]
+[debug] [2025-12-06T17:17:36.787Z] <<< [apiv2][status] PUT https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip 200
+[debug] [2025-12-06T17:17:36.787Z] <<< [apiv2][body] PUT https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip [omitted]
+[info] ✔  functions: functions source uploaded successfully 
+[info] i  functions: creating Node.js 24 (1st Gen) function sendMessageNotification(us-central1)... 
+[debug] [2025-12-06T17:17:36.789Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:36.789Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:36.789Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions [none]
+[debug] [2025-12-06T17:17:36.789Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions {"name":"projects/antigravity339/locations/us-central1/functions/sendMessageNotification","sourceUploadUrl":"https://storage.googleapis.com/uploads-2656269706.us-central1.cloudfunctions.appspot.com/3b657613-bfea-4e62-aac5-508ff4c958f9.zip?GoogleAccessId=service-60264793176@gcf-admin-robot.iam.gserviceaccount.com&Expires=1765043255&Signature=UII6jdkpQlWcBhSxt70flvCOjxrPn94di2uq6YCzVFyX7JetvPdU4aWasVXf0ZBPykcgsJht2%2BhgX0IAd0MicVsQ6Izcvy9GyJFWrqLlmUQgoEAorZl0Zn8aNZy9%2Faj2fDi18u%2FmsBGmg4u59NkztarkqR8URLuif7mukNqVO1W%2BxlCYKsuWFvf3ZKGEelWe6a8cvf4VSnKOvjk4nHlC4%2FfxqTYNneK84CF3kl%2BFMHyUK7ZN3hsX2dqZB6QzkJ%2FDEygek914JP4laIfd0%2BTvds5H5ud4nE%2FrUsUJuxazyLUsyNnFyCLI9o57C45XLoOzxWlHuWMmW1vreRp3scRZsw%3D%3D","entryPoint":"sendMessageNotification","runtime":"nodejs24","dockerRegistry":"ARTIFACT_REGISTRY","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"9c1548a41e907446da1eb9bcf1b36408b7547edb"},"eventTrigger":{"eventType":"providers/google.firebase.database/eventTypes/ref.create","resource":"projects/_/instances/antigravity339-default-rtdb/refs/conversations/{conversationId}/messages/{messageId}"},"minInstances":null,"maxInstances":null,"ingressSettings":null,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"antigravity339\",\"databaseURL\":\"https://antigravity339-default-rtdb.firebaseio.com\",\"storageBucket\":\"antigravity339.firebasestorage.app\"}","GCLOUD_PROJECT":"antigravity339","EVENTARC_CLOUD_EVENT_SOURCE":"projects/antigravity339/locations/us-central1/functions/sendMessageNotification"},"serviceAccountEmail":null,"availableMemoryMb":null,"timeout":null,"vpcConnector":null,"vpcConnectorEgressSettings":null,"buildEnvironmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}}
+[debug] [2025-12-06T17:17:41.731Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions 400
+[debug] [2025-12-06T17:17:41.731Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions {"error":{"code":400,"message":"Failed to create 1st Gen function projects/antigravity339/locations/us-central1/functions/sendMessageNotification: runtime: Runtime validation errors: [error_code: \t INVALID_RUNTIME\nmessage: \"Runtime \\\"nodejs24\\\" is not supported on GCF Gen1\"\n]","status":"INVALID_ARGUMENT"}}
+[warn] ⚠  functions: Runtime "nodejs24" is not supported on GCF Gen1 for function projects/antigravity339/locations/us-central1/functions/sendMessageNotification 
+[warn] ⚠  functions: failed to create function projects/antigravity339/locations/us-central1/functions/sendMessageNotification 
+[error] Failed to create function projects/antigravity339/locations/us-central1/functions/sendMessageNotification
+[debug] [2025-12-06T17:17:41.736Z] Total Function Deployment time: 4943
+[debug] [2025-12-06T17:17:41.736Z] 1 Functions Deployed
+[debug] [2025-12-06T17:17:41.736Z] 1 Functions Errored
+[debug] [2025-12-06T17:17:41.736Z] 0 Function Deployments Aborted
+[debug] [2025-12-06T17:17:41.736Z] Average Function Deployment time: 4943
+[info] 
+[info] Functions deploy had errors with the following functions:
+	sendMessageNotification(us-central1)
+[debug] [2025-12-06T17:17:41.902Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:41.903Z] Checked if tokens are valid: true, expires at: 1765044754730
+[debug] [2025-12-06T17:17:41.903Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/antigravity339/locations/us-central1/repositories/gcf-artifacts [none]
+[debug] [2025-12-06T17:17:43.113Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/antigravity339/locations/us-central1/repositories/gcf-artifacts 404
+[debug] [2025-12-06T17:17:43.113Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/antigravity339/locations/us-central1/repositories/gcf-artifacts {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[debug] [2025-12-06T17:17:43.113Z] Failed to check artifact cleanup policy for region us-central1: Request to https://artifactregistry.googleapis.com/v1/projects/antigravity339/locations/us-central1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found. {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}},"response":{"statusCode":404}},"exit":1,"message":"Request to https://artifactregistry.googleapis.com/v1/projects/antigravity339/locations/us-central1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found.","status":404}
+[debug] [2025-12-06T17:17:43.114Z] Functions deploy failed.
+[debug] [2025-12-06T17:17:43.114Z] {
+  "endpoint": {
+    "id": "sendMessageNotification",
+    "project": "antigravity339",
+    "region": "us-central1",
+    "entryPoint": "sendMessageNotification",
+    "platform": "gcfv1",
+    "runtime": "nodejs24",
+    "eventTrigger": {
+      "eventType": "providers/google.firebase.database/eventTypes/ref.create",
+      "retry": false,
+      "eventFilters": {
+        "resource": "projects/_/instances/antigravity339-default-rtdb/refs/conversations/{conversationId}/messages/{messageId}"
+      }
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "maxInstances": null,
+    "minInstances": null,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"antigravity339\",\"databaseURL\":\"https://antigravity339-default-rtdb.firebaseio.com\",\"storageBucket\":\"antigravity339.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "antigravity339",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/antigravity339/locations/us-central1/functions/sendMessageNotification"
+    },
+    "codebase": "default",
+    "targetedByOnly": false,
+    "hash": "9c1548a41e907446da1eb9bcf1b36408b7547edb"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/antigravity339/locations/us-central1/functions/sendMessageNotification"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/antigravity339/locations/us-central1/functions/sendMessageNotification",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Failed to create 1st Gen function projects/antigravity339/locations/us-central1/functions/sendMessageNotification: runtime: Runtime validation errors: [error_code: \t INVALID_RUNTIME\nmessage: \"Runtime \\\"nodejs24\\\" is not supported on GCF Gen1\"\n]",
+            "status": "INVALID_ARGUMENT"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v1/projects/antigravity339/locations/us-central1/functions had HTTP Error: 400, Failed to create 1st Gen function projects/antigravity339/locations/us-central1/functions/sendMessageNotification: runtime: Runtime validation errors: [error_code: \t INVALID_RUNTIME\nmessage: \"Runtime \\\"nodejs24\\\" is not supported on GCF Gen1\"\n]",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[debug] [2025-12-06T17:17:43.164Z] Error: Failed to create function sendMessageNotification in region us-central1
+    at /opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:52:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async Fabricator.createV1Function (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:194:32)
+    at async Fabricator.createEndpoint (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:134:13)
+    at async handle (/opt/homebrew/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:89:17)
+[error] 
+[error] Error: There was an error deploying functions
