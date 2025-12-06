@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
 import ProfileEditModal from '@/components/Profile/ProfileEditModal';
+import NotificationSettings from '@/components/Notification/NotificationSettings';
 import styles from './ConversationList.module.css';
 
 interface Conversation {
@@ -161,6 +162,9 @@ export default function ConversationList() {
                     変更
                 </button>
             </div>
+
+            {/* 通知設定セクション */}
+            <NotificationSettings />
 
             {conversations.length === 0 ? (
                 <div className={styles.empty}>
