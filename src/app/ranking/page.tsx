@@ -82,25 +82,42 @@ export default function RankingPage() {
         return () => unsubscribe();
     }, []);
 
-    // 開発者一覧を取得
+    // 開発者一覧を取得（スレッドから参加者を集める）
     useEffect(() => {
-        const usersRef = ref(database, 'users');
+        const threadsRef = ref(database, 'threads');
 
-        const unsubscribe = onValue(usersRef, (snapshot) => {
+        const unsubscribe = onValue(threadsRef, (snapshot) => {
             const data = snapshot.val();
-            const developersArray: Developer[] = [];
+            const developersMap = new Map<string, Developer>();
 
             if (data) {
-                Object.entries(data).forEach(([id, user]: [string, any]) => {
-                    developersArray.push({
-                        id,
-                        displayName: user.displayName || 'Unknown User',
-                        photoURL: user.photoURL || '',
-                    });
+                Object.values(data).forEach((thread: any) => {
+                    // スレッド作成者を追加
+                    if (thread.userId && thread.userName) {
+                        developersMap.set(thread.userId, {
+                            id: thread.userId,
+                            displayName: thread.userName,
+                            photoURL: thread.userAvatar || '',
+                        });
+                    }
+
+                    // 返信者も追加
+                    if (thread.replies) {
+                        Object.values(thread.replies).forEach((reply: any) => {
+                            if (reply.userId && reply.userName) {
+                                developersMap.set(reply.userId, {
+                                    id: reply.userId,
+                                    displayName: reply.userName,
+                                    photoURL: reply.userAvatar || '',
+                                });
+                            }
+                        });
+                    }
                 });
             }
 
-            // 名前順にソート
+            // MapからArrayに変換して名前順にソート
+            const developersArray = Array.from(developersMap.values());
             developersArray.sort((a, b) =>
                 a.displayName.localeCompare(b.displayName, 'ja')
             );
