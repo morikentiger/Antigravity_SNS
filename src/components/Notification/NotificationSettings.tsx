@@ -116,45 +116,49 @@ export default function NotificationSettings() {
                 </>
             )}
 
-            {permission === 'granted' && !loading && (
+            {permission === 'granted' && (
                 <div className={styles.preferences}>
                     <p className={styles.description}>
                         通知の種類を選択できます
                     </p>
 
-                    <div className={styles.toggleGroup}>
-                        <div className={styles.toggleItem}>
-                            <div className={styles.toggleInfo}>
-                                <span className={styles.toggleLabel}>💬 メッセージ通知</span>
-                                <span className={styles.toggleDesc}>
-                                    ダイレクトメッセージを受信したとき
-                                </span>
+                    {loading ? (
+                        <div className={styles.loading}>読み込み中...</div>
+                    ) : (
+                        <div className={styles.toggleGroup}>
+                            <div className={styles.toggleItem}>
+                                <div className={styles.toggleInfo}>
+                                    <span className={styles.toggleLabel}>💬 メッセージ通知</span>
+                                    <span className={styles.toggleDesc}>
+                                        ダイレクトメッセージを受信したとき
+                                    </span>
+                                </div>
+                                <button
+                                    className={`${styles.toggle} ${preferences.messages ? styles.toggleOn : ''}`}
+                                    onClick={() => handleToggle('messages')}
+                                    aria-label="メッセージ通知の切り替え"
+                                >
+                                    <span className={styles.toggleSlider} />
+                                </button>
                             </div>
-                            <button
-                                className={`${styles.toggle} ${preferences.messages ? styles.toggleOn : ''}`}
-                                onClick={() => handleToggle('messages')}
-                                aria-label="メッセージ通知の切り替え"
-                            >
-                                <span className={styles.toggleSlider} />
-                            </button>
-                        </div>
 
-                        <div className={styles.toggleItem}>
-                            <div className={styles.toggleInfo}>
-                                <span className={styles.toggleLabel}>🧵 スレッド返信通知</span>
-                                <span className={styles.toggleDesc}>
-                                    あなたのスレッドや参加しているスレッドに返信があったとき
-                                </span>
+                            <div className={styles.toggleItem}>
+                                <div className={styles.toggleInfo}>
+                                    <span className={styles.toggleLabel}>🧵 スレッド返信通知</span>
+                                    <span className={styles.toggleDesc}>
+                                        あなたのスレッドや参加しているスレッドに返信があったとき
+                                    </span>
+                                </div>
+                                <button
+                                    className={`${styles.toggle} ${preferences.threads ? styles.toggleOn : ''}`}
+                                    onClick={() => handleToggle('threads')}
+                                    aria-label="スレッド通知の切り替え"
+                                >
+                                    <span className={styles.toggleSlider} />
+                                </button>
                             </div>
-                            <button
-                                className={`${styles.toggle} ${preferences.threads ? styles.toggleOn : ''}`}
-                                onClick={() => handleToggle('threads')}
-                                aria-label="スレッド通知の切り替え"
-                            >
-                                <span className={styles.toggleSlider} />
-                            </button>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 
