@@ -1,38 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Sawarabi+Mincho&display=swap');
 
 :root {
-  /* Color Palette - Vibrant and Modern */
-  --color-primary: hsl(280, 80%, 60%);
-  --color-primary-light: hsl(280, 80%, 70%);
-  --color-primary-dark: hsl(280, 80%, 50%);
+  /* 90年代レトロカラーパレット */
+  --color-primary: #FF00FF;
+  --color-primary-light: #FF66FF;
+  --color-primary-dark: #CC00CC;
 
-  --color-secondary: hsl(200, 90%, 55%);
-  --color-secondary-light: hsl(200, 90%, 65%);
+  --color-secondary: #00FFFF;
+  --color-secondary-light: #66FFFF;
 
-  --color-accent: hsl(340, 85%, 60%);
-  --color-accent-light: hsl(340, 85%, 70%);
+  --color-accent: #FFFF00;
+  --color-accent-light: #FFFF66;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(280, 80%, 60%), hsl(340, 85%, 60%));
-  --gradient-secondary: linear-gradient(135deg, hsl(200, 90%, 55%), hsl(280, 80%, 60%));
-  --gradient-mesh: radial-gradient(at 0% 0%, hsl(280, 80%, 60%) 0px, transparent 50%),
-                   radial-gradient(at 100% 0%, hsl(200, 90%, 55%) 0px, transparent 50%),
-                   radial-gradient(at 100% 100%, hsl(340, 85%, 60%) 0px, transparent 50%),
-                   radial-gradient(at 0% 100%, hsl(280, 80%, 60%) 0px, transparent 50%);
+  /* レトログラデーション */
+  --gradient-primary: linear-gradient(135deg, #FF00FF, #00FFFF);
+  --gradient-secondary: linear-gradient(135deg, #FFFF00, #FF00FF);
+  --gradient-rainbow: linear-gradient(90deg,
+      #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
 
-  /* Dark Mode Colors */
-  --color-bg-primary: hsl(240, 15%, 8%);
-  --color-bg-secondary: hsl(240, 12%, 12%);
-  --color-bg-tertiary: hsl(240, 10%, 16%);
+  /* 背景色 - 90年代風 */
+  --color-bg-primary: #000080;
+  --color-bg-secondary: #000066;
+  --color-bg-tertiary: #0000AA;
 
-  --color-text-primary: hsl(0, 0%, 98%);
-  --color-text-secondary: hsl(0, 0%, 75%);
-  --color-text-muted: hsl(0, 0%, 55%);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFFF00;
+  --color-text-muted: #00FFFF;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: blur(20px);
+  /* テーブル風ボーダー */
+  --glass-bg: rgba(0, 0, 128, 0.8);
+  --glass-border: #FFFFFF;
+  --glass-blur: none;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -43,25 +41,25 @@
   --space-2xl: 3rem;
   --space-3xl: 4rem;
 
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  /* Border Radius - 90年代は角丸なし！ */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-full: 0;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 30px rgba(200, 100, 255, 0.3);
+  /* シャドウは90年代風 */
+  --shadow-sm: 2px 2px 0 #000000;
+  --shadow-md: 3px 3px 0 #000000;
+  --shadow-lg: 4px 4px 0 #000000;
+  --shadow-xl: 5px 5px 0 #000000;
+  --shadow-glow: 0 0 10px #FF00FF;
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 250ms ease;
-  --transition-slow: 350ms ease;
+  --transition-fast: 0ms;
+  --transition-base: 0ms;
+  --transition-slow: 0ms;
 
   /* Z-index */
   --z-dropdown: 1000;
@@ -78,71 +76,88 @@
 
 html {
   font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Sawarabi Mincho', 'Noto Serif JP', 'MS 明朝', '游明朝', serif;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  line-height: 1.6;
+  line-height: 1.8;
   overflow-x: hidden;
 }
 
-/* Background Mesh Gradient */
+/* 虹色ボーダー背景 */
 body::before {
   content: '';
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background: var(--gradient-mesh);
-  opacity: 0.15;
-  z-index: -1;
-  pointer-events: none;
+  height: 8px;
+  background: var(--gradient-rainbow);
+  z-index: 9999;
 }
 
-/* Scrollbar Styling */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: var(--gradient-rainbow);
+  z-index: 9999;
+}
+
+/* スクロールバー */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 16px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-full);
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: #A0A0A0;
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.4;
   margin-bottom: var(--space-md);
+  text-shadow: 2px 2px 0 #000080;
 }
 
 h1 {
   font-size: 2.5rem;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFFF00;
+  text-align: center;
+  animation: blink 1s infinite;
 }
 
 h2 {
   font-size: 2rem;
+  color: #00FFFF;
 }
 
 h3 {
   font-size: 1.5rem;
+  color: #FF00FF;
 }
 
 p {
@@ -150,18 +165,22 @@ p {
 }
 
 a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color var(--transition-base);
+  color: #00FFFF;
+  text-decoration: underline;
 }
 
 a:hover {
-  color: var(--color-primary-light);
+  color: #FFFF00;
+  background: #FF00FF;
+}
+
+a:visited {
+  color: #FF00FF;
 }
 
 /* Utility Classes */
 .container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 var(--space-lg);
 }
@@ -198,102 +217,104 @@ a:hover {
   gap: var(--space-lg);
 }
 
-/* Glass Card Effect */
+/* 90年代風カード */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
+  background: #C0C0C0;
+  border: 3px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
   padding: var(--space-lg);
-  transition: all var(--transition-base);
+  color: #000000;
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
+  background: #D0D0D0;
 }
 
-/* Gradient Button */
+/* 90年代風ボタン */
 .btn-gradient {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
+  background: #C0C0C0;
+  color: #000000;
+  border: 3px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
   padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-full);
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-md);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-gradient::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2));
-  opacity: 0;
-  transition: opacity var(--transition-base);
+  font-family: 'MS ゴシック', sans-serif;
+  font-size: 1rem;
 }
 
 .btn-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl), var(--shadow-glow);
-}
-
-.btn-gradient:hover::before {
-  opacity: 1;
+  background: #A0A0A0;
 }
 
 .btn-gradient:active {
-  transform: translateY(0);
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* アニメーション */
+@keyframes blink {
 
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
+  0%,
   100% {
-    background-position: 1000px 0;
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes rainbow {
+  0% {
+    color: #FF0000;
+  }
+
+  16% {
+    color: #FF7F00;
+  }
+
+  33% {
+    color: #FFFF00;
+  }
+
+  50% {
+    color: #00FF00;
+  }
+
+  66% {
+    color: #0000FF;
+  }
+
+  83% {
+    color: #9400D3;
+  }
+
+  100% {
+    color: #FF0000;
+  }
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
   }
 }
 
@@ -306,53 +327,106 @@ a:hover {
 }
 
 .animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: blink 1s infinite;
 }
 
-/* Input Styling */
-input, textarea {
+.animate-rainbow {
+  animation: rainbow 2s linear infinite;
+}
+
+/* マーキー */
+.marquee {
   width: 100%;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000080;
+  border: 2px solid #FFFFFF;
+  padding: var(--space-sm) 0;
+}
+
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 10s linear infinite;
+  color: #FFFF00;
+  font-weight: bold;
+}
+
+/* Input Styling - 90年代風 */
+input,
+textarea {
+  width: 100%;
+  background: #FFFFFF;
+  border: 2px solid;
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
   padding: var(--space-sm) var(--space-md);
-  color: var(--color-text-primary);
-  font-family: inherit;
+  color: #000000;
+  font-family: 'MS ゴシック', monospace;
   font-size: 1rem;
-  transition: all var(--transition-base);
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(200, 100, 255, 0.1);
+  border-color: #000080;
 }
 
-input::placeholder, textarea::placeholder {
-  color: var(--color-text-muted);
+input::placeholder,
+textarea::placeholder {
+  color: #808080;
 }
 
-/* Badge */
+/* Badge - 90年代風 */
 .badge {
   display: inline-block;
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--gradient-primary);
-  color: white;
-  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  background: #FF0000;
+  color: #FFFFFF;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: bold;
+  border: 1px solid #FFFFFF;
+  animation: blink 0.5s infinite;
 }
 
-/* Notification Dot */
-.notification-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--color-accent);
-  border-radius: 50%;
-  position: absolute;
-  top: 0;
-  right: 0;
-  animation: pulse 2s ease-in-out infinite;
+/* 工事中アイコン */
+.under-construction {
+  text-align: center;
+  padding: var(--space-md);
+  color: #FFFF00;
+  font-weight: bold;
+  animation: blink 1s infinite;
+}
+
+.under-construction::before {
+  content: '🚧 ';
+}
+
+.under-construction::after {
+  content: ' 🚧';
+}
+
+/* カウンター風 */
+.counter {
+  font-family: 'Courier New', monospace;
+  background: #000000;
+  color: #00FF00;
+  padding: 5px 10px;
+  border: 2px solid #FFFFFF;
+  display: inline-block;
+}
+
+/* キラキラ効果 */
+.sparkle {
+  color: #FFFF00;
+  animation: sparkle 0.5s infinite;
+  text-shadow: 0 0 10px #FFFF00;
+}
+
+/* 区切り線 - 虹色 */
+hr {
+  height: 3px;
+  border: none;
+  background: var(--gradient-rainbow);
+  margin: var(--space-lg) 0;
 }
 
 /* Responsive */
@@ -362,7 +436,7 @@ input::placeholder, textarea::placeholder {
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   h2 {
@@ -371,5 +445,25 @@ input::placeholder, textarea::placeholder {
 
   .container {
     padding: 0 var(--space-md);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }

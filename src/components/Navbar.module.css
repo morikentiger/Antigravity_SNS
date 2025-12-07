@@ -1,15 +1,13 @@
 .navbar {
     position: sticky;
-    top: 0;
+    top: 8px;
     z-index: var(--z-dropdown);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-bottom: 1px solid var(--glass-border);
+    background: #000080;
+    border-bottom: 3px solid #FFFFFF;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
     padding: var(--space-md) var(--space-lg);
     display: flex;
@@ -21,16 +19,56 @@
 .logo h1 {
     margin: 0;
     font-size: 1.5rem;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #FFFF00;
     cursor: pointer;
-    transition: transform var(--transition-base);
+    animation: rainbow 3s linear infinite;
+    text-shadow: 2px 2px 0 #000000;
+}
+
+@keyframes rainbow {
+    0% {
+        color: #FF0000;
+    }
+
+    16% {
+        color: #FF7F00;
+    }
+
+    33% {
+        color: #FFFF00;
+    }
+
+    50% {
+        color: #00FF00;
+    }
+
+    66% {
+        color: #0000FF;
+    }
+
+    83% {
+        color: #9400D3;
+    }
+
+    100% {
+        color: #FF0000;
+    }
 }
 
 .logo:hover h1 {
-    transform: scale(1.05);
+    animation: blink 0.3s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
 .navItems {
@@ -45,21 +83,23 @@
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-full);
-    color: var(--color-text-secondary);
-    font-weight: 600;
-    transition: all var(--transition-base);
-    text-decoration: none;
+    color: #00FFFF;
+    font-weight: bold;
+    text-decoration: underline;
+    background: none;
+    border: none;
 }
 
 .navItem:hover {
-    background: var(--glass-bg);
-    color: var(--color-text-primary);
+    background: #FF00FF;
+    color: #FFFF00;
 }
 
 .navItem.active {
-    background: var(--gradient-primary);
-    color: white;
+    background: #00FFFF;
+    color: #000080;
+    text-decoration: none;
+    border: 2px solid #FFFFFF;
 }
 
 .icon {
@@ -83,11 +123,11 @@
 
     .navItems {
         position: fixed;
-        bottom: 0;
+        bottom: 8px;
         left: 0;
         right: 0;
-        background: var(--color-bg-secondary);
-        border-top: 1px solid var(--glass-border);
+        background: #000080;
+        border-top: 3px solid #FFFFFF;
         padding: var(--space-sm);
         justify-content: space-around;
         z-index: var(--z-dropdown);
