@@ -19,15 +19,15 @@
             }
         },
         "rooms": {
+            ".read": "auth != null",
             "$roomId": {
+                ".write": "auth != null",
                 "participants": {
-                    ".read": "auth != null",
                     "$uid": {
                         ".write": "auth != null && auth.uid === $uid"
                     }
                 },
                 "signals": {
-                    ".read": "auth != null",
                     "$signalId": {
                         ".write": "auth != null && newData.child('from').val() === auth.uid"
                     }
