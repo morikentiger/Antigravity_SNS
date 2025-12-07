@@ -186,6 +186,15 @@
 }
 
 @media (max-width: 768px) {
+    .container {
+        border-radius: 0;
+        border: none;
+    }
+
+    .messages {
+        padding-bottom: 100px;
+    }
+
     .messageContainer {
         max-width: 85%;
     }

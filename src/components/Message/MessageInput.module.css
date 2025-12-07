@@ -89,3 +89,19 @@
 .textarea::placeholder {
     color: var(--color-text-muted);
 }
+
+/* スマホ対応 - タブバーに隠れないようにする */
+@media (max-width: 768px) {
+    .inputContainer {
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .form {
+        padding: var(--space-md);
+    }
+}
