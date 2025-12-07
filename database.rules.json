@@ -39,6 +39,10 @@
             "$uid": {
                 ".write": "auth != null && auth.uid === $uid"
             }
+        },
+        "siteStats": {
+            ".read": true,
+            ".write": true
         }
     }
 }

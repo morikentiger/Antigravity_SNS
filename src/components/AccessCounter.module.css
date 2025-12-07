@@ -1,0 +1,144 @@
+.counterContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: #000000;
+    border: 3px solid;
+    border-color: #FFFFFF #808080 #808080 #FFFFFF;
+    margin: 16px auto;
+    width: fit-content;
+}
+
+.counterLabel {
+    color: #00FF00;
+    font-size: 0.875rem;
+    font-family: 'MS ゴシック', monospace;
+}
+
+.counter {
+    display: flex;
+    gap: 2px;
+}
+
+.digit {
+    display: inline-block;
+    width: 24px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    background: #000000;
+    color: #00FF00;
+    font-size: 1.5rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    border: 1px solid #00FF00;
+    text-shadow: 0 0 10px #00FF00;
+}
+
+/* キリ番おめでとうモーダル */
+.congratsOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.congratsModal {
+    background: linear-gradient(135deg, #FF00FF, #00FFFF, #FFFF00, #FF00FF);
+    padding: 4px;
+    animation: rainbow-border 1s linear infinite;
+}
+
+.congratsModal>* {
+    background: #000080;
+    padding: 32px 48px;
+    text-align: center;
+}
+
+.congratsTitle {
+    color: #FFFF00;
+    font-size: 2rem;
+    font-weight: bold;
+    animation: blink 0.5s infinite;
+    text-shadow: 2px 2px 0 #FF0000;
+    margin-bottom: 16px;
+}
+
+.congratsNumber {
+    color: #00FF00;
+    font-size: 4rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-shadow: 0 0 20px #00FF00;
+    animation: pulse 0.5s infinite;
+    margin-bottom: 16px;
+}
+
+.congratsMessage {
+    color: #FFFFFF;
+    font-size: 1.25rem;
+    line-height: 2;
+    margin-bottom: 16px;
+}
+
+.sparkles {
+    font-size: 1.5rem;
+    animation: sparkle 0.3s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes sparkle {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes rainbow-border {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}

@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthContext';
 import PostComposer from '@/components/Post/PostComposer';
 import PostFeed from '@/components/Post/PostFeed';
 import Button from '@/components/common/Button';
+import AccessCounter from '@/components/AccessCounter';
 import styles from './page.module.css';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -77,6 +78,7 @@ export default function Home() {
     if (!user) {
         return (
             <div className={styles.welcome}>
+                <AccessCounter />
                 <div className={styles.hero}>
                     <h1>Antigravity</h1>
                     <p className={styles.tagline}>自由でおかしいSNS体験</p>
