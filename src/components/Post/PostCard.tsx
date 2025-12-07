@@ -325,10 +325,18 @@ export default function PostCard({ post }: PostCardProps) {
             {/* コンテンツレイヤー */}
             <div className={styles.contentLayer}>
                 <div className={styles.header}>
-                    <Avatar src={post.userAvatar} alt={post.userName} size="md" />
-                    <div className={styles.userInfo}>
-                        <h4 className={styles.userName}>{post.userName}</h4>
-                        <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/profile/${post.userId}`);
+                        }}
+                        style={{ cursor: 'pointer', display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}
+                    >
+                        <Avatar src={post.userAvatar} alt={post.userName} size="md" />
+                        <div className={styles.userInfo}>
+                            <h4 className={styles.userName}>{post.userName}</h4>
+                            <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
+                        </div>
                     </div>
                 </div>
 

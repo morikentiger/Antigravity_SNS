@@ -59,6 +59,11 @@ export default function UserProfilePopup({
         router.push(`/messages/${userId}?${params.toString()}`);
     };
 
+    const handleProfileClick = () => {
+        setIsOpen(false);
+        router.push(`/profile/${userId}`);
+    };
+
     return (
         <div ref={containerRef} className={styles.popupContainer}>
             <div
@@ -77,6 +82,25 @@ export default function UserProfilePopup({
                                 <Avatar src={userAvatar} alt={userName} size="md" />
                                 <p className={styles.userName}>{userName}</p>
                             </div>
+                            <button
+                                className={styles.profileButton}
+                                onClick={handleProfileClick}
+                            >
+                                <svg
+                                    className={styles.icon}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                                プロフィールを見る
+                            </button>
                             <button
                                 className={styles.messageButton}
                                 onClick={handleMessageClick}

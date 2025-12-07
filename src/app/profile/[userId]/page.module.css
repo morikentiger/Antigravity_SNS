@@ -1,0 +1,136 @@
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-xl);
+}
+
+.loading,
+.notFound {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--color-text-secondary);
+}
+
+.notFound h2 {
+    margin-bottom: var(--space-lg);
+    color: var(--color-text-primary);
+}
+
+.profileCard {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    animation: fadeIn 0.3s ease;
+}
+
+.profileHeader {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+}
+
+.profileInfo {
+    flex: 1;
+}
+
+.displayName {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bio {
+    margin: 0 0 var(--space-md) 0;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.stats {
+    display: flex;
+    gap: var(--space-lg);
+}
+
+.stat {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+}
+
+.stat strong {
+    color: var(--color-text-primary);
+    font-size: 1.125rem;
+    margin-right: var(--space-xs);
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--glass-border);
+}
+
+.postsSection {
+    animation: fadeIn 0.4s ease;
+}
+
+.sectionTitle {
+    margin: 0 0 var(--space-lg) 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.empty {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--color-text-muted);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+.postsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+    }
+
+    .profileHeader {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .displayName {
+        font-size: 1.5rem;
+    }
+
+    .stats {
+        justify-content: center;
+    }
+}

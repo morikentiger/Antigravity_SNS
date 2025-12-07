@@ -53,6 +53,7 @@
     text-align: center;
 }
 
+.profileButton,
 .messageButton {
     display: flex;
     align-items: center;
@@ -60,7 +61,6 @@
     gap: 8px;
     width: 100%;
     padding: 10px 16px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     border: none;
     border-radius: 10px;
     color: #fff;
@@ -70,15 +70,31 @@
     transition: all 0.2s ease;
 }
 
+.profileButton {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    margin-bottom: 8px;
+}
+
+.profileButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.messageButton {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
 .messageButton:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
 
+.profileButton:active,
 .messageButton:active {
     transform: translateY(0);
 }
 
+.icon,
 .messageIcon {
     width: 16px;
     height: 16px;
