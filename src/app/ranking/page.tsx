@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { database } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Avatar from '@/components/common/Avatar';
 import styles from './page.module.css';
@@ -20,6 +21,12 @@ interface ScoreEntry {
     categoryName?: string;
 }
 
+interface Developer {
+    id: string;
+    displayName: string;
+    photoURL: string;
+}
+
 const CATEGORY_NAMES: Record<string, string> = {
     'mobile-portrait': 'スマホ（縦画面）',
     'mobile-landscape': 'スマホ（横画面）',
@@ -29,9 +36,11 @@ const CATEGORY_NAMES: Record<string, string> = {
 
 export default function RankingPage() {
     const [scores, setScores] = useState<ScoreEntry[]>([]);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [selectedGame, setSelectedGame] = useState<string>('all');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const threadsRef = ref(database, 'threads');
@@ -68,6 +77,34 @@ export default function RankingPage() {
             scoresArray.sort((a, b) => b.score - a.score);
             setScores(scoresArray);
             setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // 開発者一覧を取得
+    useEffect(() => {
+        const usersRef = ref(database, 'users');
+
+        const unsubscribe = onValue(usersRef, (snapshot) => {
+            const data = snapshot.val();
+            const developersArray: Developer[] = [];
+
+            if (data) {
+                Object.entries(data).forEach(([id, user]: [string, any]) => {
+                    developersArray.push({
+                        id,
+                        displayName: user.displayName || 'Unknown User',
+                        photoURL: user.photoURL || '',
+                    });
+                });
+            }
+
+            // 名前順にソート
+            developersArray.sort((a, b) =>
+                a.displayName.localeCompare(b.displayName, 'ja')
+            );
+            setDevelopers(developersArray);
         });
 
         return () => unsubscribe();
@@ -215,6 +252,29 @@ export default function RankingPage() {
                         </div>
                     </div>
                 )}
+
+                {/* 開発者一覧（クレジット） */}
+                <div className={styles.creditsSection}>
+                    <h2 className={styles.creditsTitle}>✨ 開発者一覧 ✨</h2>
+                    <p className={styles.creditsSubtitle}>Special Thanks to All Contributors</p>
+                    <div className={styles.creditsList}>
+                        {developers.map((dev, index) => (
+                            <div
+                                key={dev.id}
+                                className={styles.creditItem}
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                                onClick={() => router.push(`/profile/${dev.id}`)}
+                            >
+                                <Avatar src={dev.photoURL} alt={dev.displayName} size="md" />
+                                <span className={styles.creditName}>{dev.displayName}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className={styles.creditsFooter}>
+                        <p>🚀 Powered by Antigravity</p>
+                        <p className={styles.yearText}>© {new Date().getFullYear()}</p>
+                    </div>
+                </div>
             </div>
         </div>
     );

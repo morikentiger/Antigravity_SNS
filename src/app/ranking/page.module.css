@@ -290,3 +290,140 @@
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 }
+
+/* Credits Section - Staff Roll Style */
+.creditsSection {
+    margin-top: var(--space-3xl);
+    padding: var(--space-3xl) var(--space-xl);
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(0, 0, 0, 0.4) 20%,
+            rgba(0, 0, 0, 0.6) 50%,
+            rgba(0, 0, 0, 0.4) 80%,
+            transparent 100%);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.creditsSection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center,
+            rgba(102, 126, 234, 0.1) 0%,
+            transparent 70%);
+    pointer-events: none;
+}
+
+.creditsTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.creditsSubtitle {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    margin-bottom: var(--space-xl);
+    letter-spacing: 0.1em;
+}
+
+.creditsList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-lg);
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.creditItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.creditItem:hover {
+    transform: translateY(-4px) scale(1.05);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.creditName {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: center;
+}
+
+.creditsFooter {
+    margin-top: var(--space-3xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+}
+
+.creditsFooter p {
+    margin: 0;
+}
+
+.yearText {
+    margin-top: var(--space-sm) !important;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+
+    to {
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 165, 0, 0.3);
+    }
+}
+
+@media (max-width: 768px) {
+    .creditsTitle {
+        font-size: 1.5rem;
+    }
+
+    .creditsList {
+        gap: var(--space-md);
+    }
+
+    .creditItem {
+        padding: var(--space-sm);
+    }
+}
