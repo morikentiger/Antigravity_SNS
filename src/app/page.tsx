@@ -117,6 +117,7 @@ export default function Home() {
                 <ScoreHandler user={user} />
             </Suspense>
             <div className={styles.container}>
+                <AccessCounter />
                 <div className={styles.main}>
                     <PostComposer />
                     <PostFeed />
