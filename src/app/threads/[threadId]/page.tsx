@@ -90,12 +90,21 @@ export default function ThreadDetailPage() {
 
         setIsPosting(true);
         try {
+            // Firebase Realtime Databaseから最新のプロフィール情報を取得
+            const userDbRef = ref(database, `users/${user.uid}`);
+            const userSnapshot = await get(userDbRef);
+            const userData = userSnapshot.val();
+
+            // 最新のプロフィール情報を使用（なければFirebase Authから）
+            const userName = userData?.displayName || user.displayName || 'Anonymous';
+            const userAvatar = userData?.photoURL || user.photoURL || '';
+
             const repliesRef = ref(database, `threads/${threadId}/replies`);
             await push(repliesRef, {
                 content: replyContent.trim(),
                 userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatar: user.photoURL || '',
+                userName: userName,
+                userAvatar: userAvatar,
                 timestamp: serverTimestamp(),
             });
 

@@ -85,13 +85,23 @@ export default function PostComposer() {
                 imageUrl = await getDownloadURL(imageRef);
             }
 
+            // Firebase Realtime Databaseから最新のプロフィール情報を取得
+            const { get, ref: dbRef } = await import('firebase/database');
+            const userDbRef = dbRef(database, `users/${user.uid}`);
+            const snapshot = await get(userDbRef);
+            const userData = snapshot.val();
+
+            // 最新のプロフィール情報を使用（なければFirebase Authから）
+            const userName = userData?.displayName || user.displayName || 'Anonymous';
+            const userAvatar = userData?.photoURL || user.photoURL || '';
+
             const threadsRef = ref(database, 'threads');
             await push(threadsRef, {
                 title: title.trim(),
                 content: content.trim(),
                 userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatar: user.photoURL || '',
+                userName: userName,
+                userAvatar: userAvatar,
                 timestamp: serverTimestamp(),
                 likes: 0,
                 likedBy: {},
