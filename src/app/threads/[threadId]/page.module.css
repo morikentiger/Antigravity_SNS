@@ -179,7 +179,7 @@
 @media (max-width: 768px) {
     .container {
         padding: var(--space-md);
-        padding-bottom: 200px;
+        padding-bottom: 280px;
     }
 
     .replyForm {
