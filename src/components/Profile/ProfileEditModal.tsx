@@ -76,10 +76,20 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
         setMessage(null);
 
         try {
+            const newDisplayName = displayName.trim();
+
             await updateProfile(user, {
-                displayName: displayName.trim(),
+                displayName: newDisplayName,
                 photoURL: photoURL,
             });
+
+            // 過去の投稿や返信のプロフィール画像も更新
+            // 非同期で実行し、ユーザーを待たせないようにすることもできるが、
+            // ここでは完了を待ってからメッセージを表示する
+            await import('@/lib/userUtils').then(({ updateUserProfileImages }) =>
+                updateUserProfileImages(user.uid, photoURL, newDisplayName)
+            );
+
             setMessage({ type: 'success', text: 'プロフィールを更新しました' });
             setTimeout(() => {
                 onClose();
