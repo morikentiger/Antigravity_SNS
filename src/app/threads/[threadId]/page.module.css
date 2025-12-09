@@ -174,3 +174,42 @@
     justify-content: flex-end;
     margin-top: var(--space-md);
 }
+
+/* スマホ対応 - タブバーに隠れないようにする */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-md);
+        padding-bottom: 200px;
+    }
+
+    .replyForm {
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        z-index: 100;
+        padding: var(--space-md);
+        padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0));
+    }
+
+    .replyFormTitle {
+        display: none;
+    }
+
+    .textarea {
+        min-height: 60px;
+    }
+
+    .threadMain {
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+    }
+
+    .reply {
+        padding: var(--space-md);
+    }
+}
