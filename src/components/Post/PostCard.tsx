@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ref, set, get, remove } from 'firebase/database';
+import { ref, set, get, remove, onValue } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -35,6 +35,28 @@ export default function PostCard({ post }: PostCardProps) {
         user ? post.likedBy?.[user.uid] || false : false
     );
     const [likeCount, setLikeCount] = useState(post.likes || 0);
+
+    // 最新のプロフィール情報を取得
+    const [currentUserName, setCurrentUserName] = useState(post.userName);
+    const [currentUserAvatar, setCurrentUserAvatar] = useState(post.userAvatar);
+
+    useEffect(() => {
+        // ユーザーの最新プロフィールを取得
+        const userRef = ref(database, `users/${post.userId}`);
+        const unsubscribe = onValue(userRef, (snapshot) => {
+            const userData = snapshot.val();
+            if (userData) {
+                if (userData.displayName) {
+                    setCurrentUserName(userData.displayName);
+                }
+                if (userData.photoURL) {
+                    setCurrentUserAvatar(userData.photoURL);
+                }
+            }
+        });
+
+        return () => unsubscribe();
+    }, [post.userId]);
 
     const handleCardClick = () => {
         router.push(`/threads/${post.id}`);
@@ -332,9 +354,9 @@ export default function PostCard({ post }: PostCardProps) {
                         }}
                         style={{ cursor: 'pointer', display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}
                     >
-                        <Avatar src={post.userAvatar} alt={post.userName} size="md" />
+                        <Avatar src={currentUserAvatar} alt={currentUserName} size="md" />
                         <div className={styles.userInfo}>
-                            <h4 className={styles.userName}>{post.userName}</h4>
+                            <h4 className={styles.userName}>{currentUserName}</h4>
                             <time className={styles.timestamp}>{formatTime(post.timestamp)}</time>
                         </div>
                     </div>
