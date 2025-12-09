@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
+
 import Avatar from '@/components/common/Avatar';
 import styles from './page.module.css';
 
@@ -164,7 +164,6 @@ export default function RankingPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
-            <Navbar />
             <div className={styles.container}>
                 <div className={styles.header}>
                     <h1 className={styles.title}>🏆 ハイスコアランキング</h1>

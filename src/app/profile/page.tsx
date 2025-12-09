@@ -8,7 +8,7 @@ import { getStorage } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
-import Navbar from '@/components/Navbar';
+
 
 export default function ProfilePage() {
     const { user, loading } = useAuth();
@@ -92,7 +92,6 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
-            <Navbar />
             <div className="container mx-auto px-4 py-8 max-w-2xl">
                 <h1 className="text-3xl font-bold mb-8">プロフィール設定</h1>
 

@@ -8,7 +8,7 @@ import { useAuth } from '@/components/AuthContext';
 import UserProfilePopup from '@/components/common/UserProfilePopup';
 import Button from '@/components/common/Button';
 import { Linkify } from '@/components/common/Linkify';
-import Navbar from '@/components/Navbar';
+
 import styles from './page.module.css';
 
 interface Thread {
@@ -138,7 +138,6 @@ export default function ThreadDetailPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-900 text-white">
-                <Navbar />
                 <div className="flex items-center justify-center h-96">
                     <p>読み込み中...</p>
                 </div>
@@ -149,7 +148,6 @@ export default function ThreadDetailPage() {
     if (!thread) {
         return (
             <div className="min-h-screen bg-gray-900 text-white">
-                <Navbar />
                 <div className="flex flex-col items-center justify-center h-96 gap-4">
                     <p>スレッドが見つかりません</p>
                     <Button onClick={() => router.push('/')} variant="primary">
@@ -162,7 +160,6 @@ export default function ThreadDetailPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
-            <Navbar />
             <div className={styles.container}>
                 <button onClick={() => router.back()} className={styles.backButton}>
                     ← 戻る
