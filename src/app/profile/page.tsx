@@ -85,12 +85,16 @@ export default function ProfilePage() {
 
             // Firebase Realtime Databaseにも保存（他のページで参照される）
             const userDbRef = dbRef(database, `users/${user.uid}`);
-            await set(userDbRef, {
+            const userData = {
                 displayName: newDisplayName,
                 photoURL: photoURL,
                 email: user.email,
                 updatedAt: Date.now(),
-            });
+            };
+            console.log('Saving user data to database:', userData);
+            console.log('User ID:', user.uid);
+            await set(userDbRef, userData);
+            console.log('User data saved successfully!');
 
             setMessage({ type: 'success', text: 'プロフィールを更新しました' });
 
