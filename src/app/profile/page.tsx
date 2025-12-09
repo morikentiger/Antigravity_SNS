@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { updateProfile } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorage } from 'firebase/storage';
+import { ref as dbRef, set } from 'firebase/database';
+import { database } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
@@ -50,10 +52,10 @@ export default function ProfilePage() {
 
         try {
             const storage = getStorage();
-            const storageRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${file.name}`);
+            const fileRef = storageRef(storage, `avatars/${user.uid}/${Date.now()}_${file.name}`);
 
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(fileRef);
 
             setPhotoURL(downloadURL);
             setMessage({ type: 'success', text: '画像をアップロードしました。「保存する」を押して確定してください。' });
@@ -73,11 +75,29 @@ export default function ProfilePage() {
         setMessage(null);
 
         try {
+            const newDisplayName = displayName.trim();
+
+            // Firebase Authのプロフィールを更新
             await updateProfile(user, {
-                displayName: displayName.trim(),
+                displayName: newDisplayName,
                 photoURL: photoURL,
             });
+
+            // Firebase Realtime Databaseにも保存（他のページで参照される）
+            const userDbRef = dbRef(database, `users/${user.uid}`);
+            await set(userDbRef, {
+                displayName: newDisplayName,
+                photoURL: photoURL,
+                email: user.email,
+                updatedAt: Date.now(),
+            });
+
             setMessage({ type: 'success', text: 'プロフィールを更新しました' });
+
+            // ページをリロードして最新の情報を反映
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (error: any) {
             console.error('Error updating profile:', error);
             setMessage({ type: 'error', text: '更新に失敗しました: ' + error.message });
