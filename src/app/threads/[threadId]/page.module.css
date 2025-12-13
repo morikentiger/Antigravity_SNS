@@ -363,6 +363,29 @@
     cursor: not-allowed;
 }
 
+.yuiReplyButton {
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    background: transparent;
+    border: 1px solid rgba(200, 100, 255, 0.3);
+    border-radius: var(--radius-md);
+    color: rgba(200, 100, 255, 0.9);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.yuiReplyButton:hover:not(:disabled) {
+    background: rgba(200, 100, 255, 0.1);
+    border-color: rgba(200, 100, 255, 0.5);
+}
+
+.yuiReplyButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* YUi Modal */
 .yuiModal {
     background: var(--color-bg-secondary);

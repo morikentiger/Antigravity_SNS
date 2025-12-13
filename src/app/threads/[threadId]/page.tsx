@@ -56,6 +56,7 @@ export default function ThreadDetailPage() {
     } | null>(null);
     const [isLoadingYui, setIsLoadingYui] = useState(false);
     const [isPostingYui, setIsPostingYui] = useState(false);
+    const [yuiReplyTarget, setYuiReplyTarget] = useState<{ type: 'post' | 'reply'; content: string; userName?: string } | null>(null);
 
     useEffect(() => {
         if (!threadId) return;
@@ -147,12 +148,13 @@ export default function ThreadDetailPage() {
         }
     };
 
-    // YUi Assist機能
+    // YUi Assist機能（投稿対象）
     const handleYuiAssist = async () => {
         if (!thread) return;
 
         setIsLoadingYui(true);
         setShowYuiModal(true);
+        setYuiReplyTarget({ type: 'post', content: `${thread.title}\n${thread.content}` });
 
         try {
             const response = await fetch('/api/yui/assist', {
@@ -160,6 +162,35 @@ export default function ThreadDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     content: `${thread.title}\n${thread.content}`
+                }),
+            });
+
+            if (!response.ok) throw new Error('API call failed');
+
+            const data = await response.json();
+            setYuiSuggestions(data);
+        } catch (error) {
+            console.error('YUi assist error:', error);
+            alert('YUiの提案を取得できませんでした');
+            setShowYuiModal(false);
+        } finally {
+            setIsLoadingYui(false);
+        }
+    };
+
+    // YUi Assist機能（返信対象）
+    const handleYuiAssistForReply = async (reply: Reply) => {
+        setIsLoadingYui(true);
+        setShowYuiModal(true);
+        setYuiReplyTarget({ type: 'reply', content: reply.content, userName: reply.userName });
+
+        try {
+            const response = await fetch('/api/yui/assist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: reply.content,
+                    context: `${reply.userName}さんの返信に対して`
                 }),
             });
 
@@ -376,6 +407,16 @@ export default function ThreadDetailPage() {
                             <p className={styles.replyContent}>
                                 <Linkify>{reply.content}</Linkify>
                             </p>
+                            {/* YUi返信ボタン */}
+                            {user && reply.authorType !== 'yui' && (
+                                <button
+                                    className={styles.yuiReplyButton}
+                                    onClick={() => handleYuiAssistForReply(reply)}
+                                    disabled={isLoadingYui}
+                                >
+                                    ✨ YUiからの返信
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -433,9 +474,13 @@ export default function ThreadDetailPage() {
 
                 {/* YUi Assist Modal */}
                 {showYuiModal && (
-                    <div className={styles.modalOverlay} onClick={() => { setShowYuiModal(false); setYuiSuggestions(null); }}>
+                    <div className={styles.modalOverlay} onClick={() => { setShowYuiModal(false); setYuiSuggestions(null); setYuiReplyTarget(null); }}>
                         <div className={styles.yuiModal} onClick={(e) => e.stopPropagation()}>
-                            <h3 className={styles.yuiModalTitle}>✨ YUiの提案</h3>
+                            <h3 className={styles.yuiModalTitle}>
+                                {yuiReplyTarget?.type === 'reply'
+                                    ? `✨ ${yuiReplyTarget.userName}さんへのYUi返信`
+                                    : '✨ YUiの提案'}
+                            </h3>
                             {isLoadingYui ? (
                                 <p className={styles.yuiModalLoading}>考え中...</p>
                             ) : yuiSuggestions ? (
