@@ -1,10 +1,54 @@
 .controlBar {
     display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+    flex-direction: column;
+    gap: var(--space-xs);
     padding: var(--space-sm) var(--space-md);
     background: rgba(0, 0, 0, 0.7);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 認識中の音声表示 */
+.transcriptBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: rgba(0, 212, 255, 0.9);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px rgba(0, 212, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+    }
+}
+
+.transcriptIcon {
+    flex-shrink: 0;
+}
+
+.transcriptText {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 入力行（メッセージ + アクションボタン） */
+.inputRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 /* メッセージ入力エリア */
@@ -530,6 +574,39 @@
     text-align: center;
     color: var(--color-text-muted);
     font-style: italic;
+}
+
+/* マイク申請アイテム */
+.micRequestItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+}
+
+.micRequestName {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+}
+
+.grantButton {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    border: none;
+    border-radius: 8px;
+    padding: var(--space-xs) var(--space-sm);
+    color: #000;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.grantButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
 }
 
 @media (max-width: 768px) {

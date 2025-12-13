@@ -13,7 +13,6 @@ import CommentList, { Comment } from './CommentList';
 import SpeakerPanel, { Speaker } from './SpeakerPanel';
 import ControlBar from './ControlBar';
 import ParticipantPanel, { Participant } from './ParticipantPanel';
-import YuiVoicePanel from './YuiVoicePanel';
 import { useYuiVoiceAssist } from './useYuiVoiceAssist';
 import styles from './RoomView.module.css';
 import type Peer from 'simple-peer';
@@ -428,11 +427,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
     };
 
-    const handleOpenMicRequests = () => {
-        // TODO: マイク申請リストを表示
-        console.log('Open mic requests', micRequests);
-    };
-
     const handleToggleAutoGrant = async (enabled: boolean) => {
         if (!isHost) return;
 
@@ -589,10 +583,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 isMuted={isMuted}
                 hasMicRequest={micRequests.length > 0}
                 micRequestCount={micRequests.length}
+                micRequests={micRequests}
                 autoGrantMic={autoGrantMic}
                 yuiSuggestions={yuiAssist.suggestions}
                 isYuiLoading={yuiAssist.isLoading}
                 yuiAvatar={yuiAvatar}
+                realtimeTranscript={yuiAssist.realtimeTranscript}
                 onSendMessage={handleSendMessage}
                 onSendImage={handleSendImage}
                 onSharePost={handleSharePost}
@@ -600,7 +596,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onGame={handleGame}
                 onToggleMute={toggleMute}
                 onRequestMic={handleRequestMic}
-                onOpenMicRequests={handleOpenMicRequests}
+                onGrantMic={handleGrantMic}
                 onToggleAutoGrant={handleToggleAutoGrant}
                 onRequestYuiSuggestions={yuiAssist.requestSuggestions}
                 onSelectYuiSuggestion={yuiAssist.speakSuggestion}
@@ -615,22 +611,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onKick={handleKick}
                 onGrantMic={handleGrantMic}
                 onAvatarClick={handleAvatarClick}
-            />
-
-            {/* YUi Voice Panel */}
-            <YuiVoicePanel
-                isSupported={yuiAssist.isSupported}
-                isListening={isConnected}
-                isSpeaking={yuiAssist.isSpeaking}
-                isLoading={yuiAssist.isLoading}
-                suggestions={yuiAssist.suggestions}
-                capturedContext={yuiAssist.capturedContext}
-                realtimeTranscript={yuiAssist.realtimeTranscript}
-                showForgottenMessage={yuiAssist.showForgottenMessage}
-                error={yuiAssist.error}
-                onRequestSuggestions={yuiAssist.requestSuggestions}
-                onSelectSuggestion={yuiAssist.speakSuggestion}
-                onCancel={yuiAssist.reset}
             />
         </div>
     );
