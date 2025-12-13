@@ -168,6 +168,12 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                 updateUserProfileImages(user.uid, photoURL, newDisplayName)
             );
 
+            // YUi返信のプロフィールも更新
+            const finalYuiName = yuiName.trim() || 'YUi';
+            await import('@/lib/userUtils').then(({ updateYuiProfileImages }) =>
+                updateYuiProfileImages(user.uid, yuiAvatar, finalYuiName, newDisplayName)
+            );
+
             // Firebase Realtime DatabaseにyuiNameも保存
             const userDbRef = dbRef(database, `users/${user.uid}`);
             const existingSnapshot = await get(userDbRef);
@@ -176,7 +182,7 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                 ...existingData,
                 displayName: newDisplayName,
                 photoURL: photoURL,
-                yuiName: yuiName.trim() || 'YUi',
+                yuiName: finalYuiName,
                 yuiAvatar: yuiAvatar || '',
                 email: user.email,
                 updatedAt: Date.now(),
