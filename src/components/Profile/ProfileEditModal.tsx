@@ -20,17 +20,20 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
     const [displayName, setDisplayName] = useState('');
     const [photoURL, setPhotoURL] = useState('');
     const [yuiName, setYuiName] = useState('YUi');
+    const [yuiAvatar, setYuiAvatar] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isUploadingYui, setIsUploadingYui] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const yuiFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen && user) {
             setDisplayName(user.displayName || '');
             setPhotoURL(user.photoURL || '');
             setMessage(null);
-            // FirebaseからyuiNameを取得
+            // FirebaseからyuiNameとyuiAvatarを取得
             const userDbRef = dbRef(database, `users/${user.uid}`);
             get(userDbRef).then((snapshot) => {
                 const data = snapshot.val();
@@ -38,6 +41,11 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                     setYuiName(data.yuiName);
                 } else {
                     setYuiName('YUi');
+                }
+                if (data?.yuiAvatar) {
+                    setYuiAvatar(data.yuiAvatar);
+                } else {
+                    setYuiAvatar('');
                 }
             });
         }
@@ -81,6 +89,40 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
         }
     };
 
+    const handleYuiFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            setMessage({ type: 'error', text: 'YUi画像は5MB以下にしてください' });
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            setMessage({ type: 'error', text: '画像ファイルを選択してください' });
+            return;
+        }
+
+        setIsUploadingYui(true);
+        setMessage(null);
+
+        try {
+            const storage = getStorage();
+            const storageRef = ref(storage, `yui-avatars/${user.uid}/${Date.now()}_${file.name}`);
+
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            setYuiAvatar(downloadURL);
+            setMessage({ type: 'success', text: 'YUi画像をアップロードしました。「保存する」を押して確定してください。' });
+        } catch (error: any) {
+            console.error('Error uploading YUi avatar:', error);
+            setMessage({ type: 'error', text: 'YUi画像のアップロードに失敗しました: ' + error.message });
+        } finally {
+            setIsUploadingYui(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
@@ -112,6 +154,7 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                 displayName: newDisplayName,
                 photoURL: photoURL,
                 yuiName: yuiName.trim() || 'YUi',
+                yuiAvatar: yuiAvatar || '',
                 email: user.email,
                 updatedAt: Date.now(),
             });
@@ -202,6 +245,39 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                             </p>
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                🌟 YUiのアバター
+                            </label>
+                            <div className="flex items-center gap-4">
+                                <div className="relative">
+                                    <Avatar
+                                        src={yuiAvatar || '/yui-avatar.png'}
+                                        alt="YUi Avatar"
+                                        size="md"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => yuiFileInputRef.current?.click()}
+                                        className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 text-white rounded-full p-1.5 shadow-lg transition-colors text-xs"
+                                        disabled={isUploadingYui}
+                                    >
+                                        {isUploadingYui ? '...' : '✨'}
+                                    </button>
+                                    <input
+                                        ref={yuiFileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleYuiFileChange}
+                                        className="hidden"
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    YUiが返信するときのアイコンです
+                                </p>
+                            </div>
+                        </div>
+
                         {message && (
                             <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-900/50 text-green-200' : 'bg-red-900/50 text-red-200'}`}>
                                 {message.text}
@@ -212,7 +288,7 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                             <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving || isUploading}>
                                 キャンセル
                             </Button>
-                            <Button type="submit" variant="primary" disabled={isSaving || isUploading}>
+                            <Button type="submit" variant="primary" disabled={isSaving || isUploading || isUploadingYui}>
                                 {isSaving ? '保存中...' : '保存する'}
                             </Button>
                         </div>
