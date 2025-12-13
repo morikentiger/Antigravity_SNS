@@ -252,6 +252,78 @@
 }
 
 /* ============================================
+   Realtime Listening Display
+   ============================================ */
+
+.realtimeBox {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(100, 200, 255, 0.05);
+    border: 1px solid rgba(100, 200, 255, 0.15);
+    border-radius: var(--radius-md);
+    animation: fadeIn 0.3s ease;
+}
+
+.realtimeLabel {
+    font-size: 0.7rem;
+    color: rgba(100, 200, 255, 0.7);
+    display: block;
+    margin-bottom: var(--space-xs);
+}
+
+.realtimeText {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+    word-break: break-word;
+    max-height: 3em;
+    overflow: hidden;
+}
+
+/* ============================================
+   Forgotten Message
+   ============================================ */
+
+.forgottenMessage {
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(180, 220, 255, 0.6);
+    padding: var(--space-sm) 0;
+    animation: fadeInOut 1.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* ============================================
    Responsive
    ============================================ */
 

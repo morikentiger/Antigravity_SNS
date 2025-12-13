@@ -11,6 +11,8 @@ interface YuiVoicePanelProps {
     isLoading: boolean;
     suggestions: YuiSuggestions | null;
     capturedContext: string | null;
+    realtimeTranscript: string | null;
+    showForgottenMessage: boolean;
     error: string | null;
     onRequestSuggestions: () => void;
     onSelectSuggestion: (type: SuggestionType) => void;
@@ -24,6 +26,8 @@ export default function YuiVoicePanel({
     isLoading,
     suggestions,
     capturedContext,
+    realtimeTranscript,
+    showForgottenMessage,
     error,
     onRequestSuggestions,
     onSelectSuggestion,
@@ -111,24 +115,41 @@ export default function YuiVoicePanel({
 
             {/* 通常状態（トリガーボタン） */}
             {!isSpeaking && !suggestions && (
-                <button
-                    className={styles.triggerButton}
-                    onClick={onRequestSuggestions}
-                    disabled={isLoading}
-                    type="button"
-                >
-                    {isLoading ? (
-                        <>
-                            <span className={styles.loadingSpinner}></span>
-                            <span>考え中...</span>
-                        </>
-                    ) : (
-                        <>
-                            <span className={styles.triggerIcon}>🤍</span>
-                            <span>ナビ一言</span>
-                        </>
+                <>
+                    <button
+                        className={styles.triggerButton}
+                        onClick={onRequestSuggestions}
+                        disabled={isLoading}
+                        type="button"
+                    >
+                        {isLoading ? (
+                            <>
+                                <span className={styles.loadingSpinner}></span>
+                                <span>考え中...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className={styles.triggerIcon}>🤍</span>
+                                <span>ナビ一言</span>
+                            </>
+                        )}
+                    </button>
+
+                    {/* リアルタイム聞き取り表示 */}
+                    {realtimeTranscript && (
+                        <div className={styles.realtimeBox}>
+                            <span className={styles.realtimeLabel}>👂 今聞いています:</span>
+                            <p className={styles.realtimeText}>「{realtimeTranscript}」</p>
+                        </div>
                     )}
-                </button>
+                </>
+            )}
+
+            {/* 忘却サイン */}
+            {showForgottenMessage && (
+                <div className={styles.forgottenMessage}>
+                    🫧 この音声は保存されていません
+                </div>
             )}
 
             {/* エラー表示 */}

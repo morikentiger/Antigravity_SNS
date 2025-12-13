@@ -336,6 +336,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 isLoading={yuiAssist.isLoading}
                 suggestions={yuiAssist.suggestions}
                 capturedContext={yuiAssist.capturedContext}
+                realtimeTranscript={yuiAssist.realtimeTranscript}
+                showForgottenMessage={yuiAssist.showForgottenMessage}
                 error={yuiAssist.error}
                 onRequestSuggestions={yuiAssist.requestSuggestions}
                 onSelectSuggestion={yuiAssist.speakSuggestion}

@@ -28,6 +28,8 @@ export interface UseYuiVoiceAssistReturn {
     isLoading: boolean;
     suggestions: YuiSuggestions | null;
     capturedContext: string | null;  // 取得したSTT結果を表示用に公開
+    realtimeTranscript: string | null;  // リアルタイムで聞いている内容
+    showForgottenMessage: boolean;  // 忘却サイン表示
     error: string | null;
 
     // Actions
@@ -56,6 +58,8 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<YuiSuggestions | null>(null);
     const [capturedContext, setCapturedContext] = useState<string | null>(null);
+    const [realtimeTranscript, setRealtimeTranscript] = useState<string | null>(null);
+    const [showForgottenMessage, setShowForgottenMessage] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // 最後のコンテキスト（メモリ上のみ）
@@ -95,13 +99,20 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
 
         // STT: 音声認識開始
         sttRef.current.start((result) => {
+            // リアルタイム表示用（常に最新）
+            setRealtimeTranscript(result.transcript);
+
             if (result.isFinal) {
-                // 直前の発話をバッファ（メモリのみ）
-                lastContextRef.current = result.transcript;
+                // 確定した発話をバッファに追加（直前2〜3文まで保持）
+                const prev = lastContextRef.current;
+                const combined = prev ? `${prev} ${result.transcript}` : result.transcript;
+                // 最大200文字まで保持（古い部分を削除）
+                lastContextRef.current = combined.slice(-200);
             }
         });
 
         setIsListening(true);
+        setRealtimeTranscript(null);
         setError(null);
     }, []);
 
@@ -182,7 +193,12 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
             () => setIsSpeaking(true),  // onStart
             () => {                      // onEnd
                 setIsSpeaking(false);
-                setSuggestions(null);      // 発話完了後にリセット
+                setSuggestions(null);
+                setCapturedContext(null);
+
+                // 忘却サインを表示（1.5秒後に消える）
+                setShowForgottenMessage(true);
+                setTimeout(() => setShowForgottenMessage(false), 1500);
             }
         );
     }, [suggestions]);
@@ -200,6 +216,7 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
         lastContextRef.current = '';
         setSuggestions(null);
         setCapturedContext(null);
+        setRealtimeTranscript(null);
         setIsSpeaking(false);
         setIsLoading(false);
         setError(null);
@@ -212,6 +229,8 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
         isLoading,
         suggestions,
         capturedContext,
+        realtimeTranscript,
+        showForgottenMessage,
         error,
         startListening,
         stopListening,
