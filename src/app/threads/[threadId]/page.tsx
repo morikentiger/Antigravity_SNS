@@ -407,8 +407,8 @@ export default function ThreadDetailPage() {
                             <p className={styles.replyContent}>
                                 <Linkify>{reply.content}</Linkify>
                             </p>
-                            {/* YUi返信ボタン */}
-                            {user && reply.authorType !== 'yui' && (
+                            {/* YUi返信ボタン（自分のYUi返信以外に表示） */}
+                            {user && !(reply.authorType === 'yui' && reply.masterUserId === user.uid) && (
                                 <button
                                     className={styles.yuiReplyButton}
                                     onClick={() => handleYuiAssistForReply(reply)}
