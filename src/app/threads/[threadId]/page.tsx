@@ -193,7 +193,7 @@ export default function ThreadDetailPage() {
             await push(repliesRef, {
                 content: content,
                 userId: user.uid,
-                userName: `${yuiName}（${userName}のナビ）`,
+                userName: `${yuiName}（${userName}のYUi）`,
                 userAvatar: yuiAvatar,
                 timestamp: serverTimestamp(),
                 authorType: 'yui',

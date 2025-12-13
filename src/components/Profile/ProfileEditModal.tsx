@@ -8,6 +8,7 @@ import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
+import ImageCropper from '@/components/common/ImageCropper';
 import styles from './ProfileEditModal.module.css';
 
 interface ProfileEditModalProps {
@@ -27,6 +28,10 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const yuiFileInputRef = useRef<HTMLInputElement>(null);
+
+    // Cropping state
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [cropType, setCropType] = useState<'user' | 'yui' | null>(null);
 
     useEffect(() => {
         if (isOpen && user) {
@@ -57,36 +62,26 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // ファイルサイズチェック（5MB以下）
         if (file.size > 5 * 1024 * 1024) {
             setMessage({ type: 'error', text: '画像サイズは5MB以下にしてください' });
             return;
         }
 
-        // 画像タイプチェック
         if (!file.type.startsWith('image/')) {
             setMessage({ type: 'error', text: '画像ファイルを選択してください' });
             return;
         }
 
-        setIsUploading(true);
-        setMessage(null);
+        // 画像を読み込んでクロッパーを表示
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropImageSrc(reader.result as string);
+            setCropType('user');
+        };
+        reader.readAsDataURL(file);
 
-        try {
-            const storage = getStorage();
-            const storageRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${file.name}`);
-
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
-
-            setPhotoURL(downloadURL);
-            setMessage({ type: 'success', text: '画像をアップロードしました。「保存する」を押して確定してください。' });
-        } catch (error: any) {
-            console.error('Error uploading file:', error);
-            setMessage({ type: 'error', text: 'アップロードに失敗しました: ' + error.message });
-        } finally {
-            setIsUploading(false);
-        }
+        // ファイル入力をリセット
+        e.target.value = '';
     };
 
     const handleYuiFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,24 +98,52 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
             return;
         }
 
-        setIsUploadingYui(true);
+        // 画像を読み込んでクロッパーを表示
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropImageSrc(reader.result as string);
+            setCropType('yui');
+        };
+        reader.readAsDataURL(file);
+
+        e.target.value = '';
+    };
+
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        if (!user || !cropType) return;
+
+        const isYui = cropType === 'yui';
+        isYui ? setIsUploadingYui(true) : setIsUploading(true);
         setMessage(null);
+        setCropImageSrc(null);
+        setCropType(null);
 
         try {
             const storage = getStorage();
-            const storageRef = ref(storage, `yui-avatars/${user.uid}/${Date.now()}_${file.name}`);
+            const folder = isYui ? 'yui-avatars' : 'avatars';
+            const storageRef = ref(storage, `${folder}/${user.uid}/${Date.now()}_cropped.jpg`);
 
-            await uploadBytes(storageRef, file);
+            await uploadBytes(storageRef, croppedBlob);
             const downloadURL = await getDownloadURL(storageRef);
 
-            setYuiAvatar(downloadURL);
-            setMessage({ type: 'success', text: 'YUi画像をアップロードしました。「保存する」を押して確定してください。' });
+            if (isYui) {
+                setYuiAvatar(downloadURL);
+                setMessage({ type: 'success', text: 'YUi画像をアップロードしました。「保存する」を押して確定してください。' });
+            } else {
+                setPhotoURL(downloadURL);
+                setMessage({ type: 'success', text: '画像をアップロードしました。「保存する」を押して確定してください。' });
+            }
         } catch (error: any) {
-            console.error('Error uploading YUi avatar:', error);
-            setMessage({ type: 'error', text: 'YUi画像のアップロードに失敗しました: ' + error.message });
+            console.error('Error uploading cropped image:', error);
+            setMessage({ type: 'error', text: 'アップロードに失敗しました: ' + error.message });
         } finally {
-            setIsUploadingYui(false);
+            isYui ? setIsUploadingYui(false) : setIsUploading(false);
         }
+    };
+
+    const handleCropCancel = () => {
+        setCropImageSrc(null);
+        setCropType(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -295,6 +318,16 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                     </form>
                 </div>
             </div>
+
+            {/* Image Cropper Modal */}
+            {cropImageSrc && (
+                <ImageCropper
+                    imageSrc={cropImageSrc}
+                    onCropComplete={handleCropComplete}
+                    onCancel={handleCropCancel}
+                    aspectRatio={1}
+                />
+            )}
         </div>
     );
 }
