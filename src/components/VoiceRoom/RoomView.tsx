@@ -479,6 +479,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
         await remove(requestRef);
     };
 
+    const handleStepDownMic = async () => {
+        if (!user || isHost) return; // ホストはマイクを降りれない
+
+        const participantRef = ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaker`);
+        await set(participantRef, false);
+    };
+
     // スピーカーデータを生成
     const speakers: Speaker[] = participants
         .filter(p => p.isSpeaker || p.id === roomData?.hostId)
@@ -571,6 +578,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 >
                     <SpeakerPanel
                         speakers={speakers}
+                        yuiAvatar={yuiAvatar}
                         onAvatarClick={handleAvatarClick}
                         onEmptySlotClick={() => setShowParticipantPanel(true)}
                     />
@@ -597,6 +605,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onToggleMute={toggleMute}
                 onRequestMic={handleRequestMic}
                 onGrantMic={handleGrantMic}
+                onStepDownMic={handleStepDownMic}
                 onToggleAutoGrant={handleToggleAutoGrant}
                 onRequestYuiSuggestions={yuiAssist.requestSuggestions}
                 onSelectYuiSuggestion={yuiAssist.speakSuggestion}

@@ -17,6 +17,7 @@ export interface Speaker {
 interface SpeakerPanelProps {
     speakers: Speaker[];
     maxSlots?: number;
+    yuiAvatar?: string;
     onAvatarClick: (userId: string) => void;
     onEmptySlotClick: () => void;
 }
@@ -24,6 +25,7 @@ interface SpeakerPanelProps {
 export default function SpeakerPanel({
     speakers,
     maxSlots = 6,
+    yuiAvatar,
     onAvatarClick,
     onEmptySlotClick,
 }: SpeakerPanelProps) {
@@ -73,7 +75,11 @@ export default function SpeakerPanel({
                         {speaker.hasYui && (
                             <div className={styles.yuiSlot}>
                                 <div className={styles.yuiAvatar}>
-                                    🤖
+                                    {yuiAvatar ? (
+                                        <Avatar src={yuiAvatar} alt="YUi" size="sm" />
+                                    ) : (
+                                        '🤖'
+                                    )}
                                 </div>
                             </div>
                         )}

@@ -51,6 +51,7 @@ interface ControlBarProps {
     onToggleMute: () => void;
     onRequestMic: () => void;
     onGrantMic: (userId: string) => void;
+    onStepDownMic: () => void;
     onToggleAutoGrant: (enabled: boolean) => void;
     onRequestYuiSuggestions: () => void;
     onSelectYuiSuggestion: (type: SuggestionType) => void;
@@ -82,6 +83,7 @@ export default function ControlBar({
     onToggleMute,
     onRequestMic,
     onGrantMic,
+    onStepDownMic,
     onToggleAutoGrant,
     onRequestYuiSuggestions,
     onSelectYuiSuggestion,
@@ -363,14 +365,26 @@ export default function ControlBar({
 
                     {/* マイクミュート/申請ボタン */}
                     {isSpeaker ? (
-                        <button
-                            className={`${styles.micButton} ${isMuted ? styles.muted : styles.unmuted}`}
-                            onClick={onToggleMute}
-                            type="button"
-                            title={isMuted ? 'ミュート解除' : 'ミュート'}
-                        >
-                            {isMuted ? '🔇' : '🎙️'}
-                        </button>
+                        <div className={styles.micControls}>
+                            <button
+                                className={`${styles.micButton} ${isMuted ? styles.muted : styles.unmuted}`}
+                                onClick={onToggleMute}
+                                type="button"
+                                title={isMuted ? 'ミュート解除' : 'ミュート'}
+                            >
+                                {isMuted ? '🔇' : '🎙️'}
+                            </button>
+                            {!isHost && (
+                                <button
+                                    className={styles.stepDownButton}
+                                    onClick={onStepDownMic}
+                                    type="button"
+                                    title="マイクを降りる"
+                                >
+                                    ⬇️
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         <button
                             className={styles.requestMicButton}

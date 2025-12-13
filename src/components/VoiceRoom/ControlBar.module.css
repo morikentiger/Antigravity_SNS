@@ -362,6 +362,28 @@
     transform: scale(1.1);
 }
 
+.micControls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.stepDownButton {
+    width: 36px;
+    height: 36px;
+    background: rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stepDownButton:hover {
+    background: rgba(239, 68, 68, 0.5);
+    transform: scale(1.1);
+}
+
 .requestMicButton {
     background: linear-gradient(135deg, #667eea, #764ba2);
     border: none;
