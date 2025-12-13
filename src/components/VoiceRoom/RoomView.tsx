@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ref, onValue, set, remove, push, onChildAdded, get } from 'firebase/database';
+import { ref, onValue, set, remove, push, onChildAdded, get, onChildRemoved } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { createPeer, getUserMedia, stopMediaStream } from '@/lib/webrtc';
+import { SpeechSynthesisService } from '@/lib/speechServices';
 import { useRouter } from 'next/navigation';
 
 // New Components
@@ -49,9 +50,11 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [autoGrantMic, setAutoGrantMic] = useState(false);
     const [topic, setTopic] = useState('');
     const [yuiAvatar, setYuiAvatar] = useState<string>('');
+    const [yuiName, setYuiName] = useState<string>('YUi');
     const streamRef = useRef<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+    const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
 
     // YUi Voice Assist Hook
     const yuiAssist = useYuiVoiceAssist();
@@ -85,7 +88,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user]);
 
-    // ユーザーのYUiアバターを取得
+    // ユーザーのYUiアバターと名前を取得
     useEffect(() => {
         if (!user) return;
 
@@ -95,7 +98,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
             if (data?.yuiAvatar) {
                 setYuiAvatar(data.yuiAvatar);
             }
+            if (data?.yuiName) {
+                setYuiName(data.yuiName);
+            }
         }).catch(console.error);
+
+        // TTSサービスを初期化（他の人のYUi発話再生用）
+        otherYuiTtsRef.current = new SpeechSynthesisService();
+
+        return () => {
+            otherYuiTtsRef.current?.stop();
+            otherYuiTtsRef.current = null;
+        };
     }, [user]);
 
     // 参加者リストの監視
@@ -157,6 +171,37 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         return () => unsubscribe();
     }, [roomId, user, isHost]);
+
+    // 他の人のYUi発話を監視してTTS再生
+    useEffect(() => {
+        if (!user || !isConnected) return;
+
+        const yuiSpeechRef = ref(database, `rooms/${roomId}/yuiSpeech`);
+        const unsubscribe = onChildAdded(yuiSpeechRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            // 自分の発話は無視（自分のYUiは自分でTTS再生済み）
+            if (data.speakerId === user.uid) return;
+
+            // 古い発話は無視（5秒以上前）
+            if (Date.now() - data.timestamp > 5000) return;
+
+            // 他の人のYUi発話をTTSで再生
+            if (otherYuiTtsRef.current && data.text) {
+                otherYuiTtsRef.current.speak(
+                    { text: data.text },
+                    () => console.log(`Playing ${data.yuiName}'s speech`),
+                    () => {
+                        // 再生完了後にFirebaseから削除
+                        remove(ref(database, `rooms/${roomId}/yuiSpeech/${snapshot.key}`));
+                    }
+                );
+            }
+        });
+
+        return () => unsubscribe();
+    }, [roomId, user?.uid, isConnected]);
 
     const playAudio = useCallback((userId: string, stream: MediaStream) => {
         if (audioElementsRef.current[userId]) {
@@ -486,6 +531,29 @@ export default function RoomView({ roomId }: RoomViewProps) {
         await set(participantRef, false);
     };
 
+    // YUi発話を選択した時：ローカルTTS + Firebase経由で他の人に送信
+    const handleYuiSpeechBroadcast = async (type: 'summary' | 'emotion' | 'encourage') => {
+        if (!user || !yuiAssist.suggestions) return;
+
+        const text = yuiAssist.suggestions[type];
+        if (!text) return;
+
+        // 自分のYUiはローカルで再生
+        yuiAssist.speakSuggestion(type);
+
+        // Firebaseに発話を送信（他の人が聞けるように）
+        const speechRef = push(ref(database, `rooms/${roomId}/yuiSpeech`));
+        await set(speechRef, {
+            speakerId: user.uid,
+            speakerName: user.displayName || 'Anonymous',
+            yuiName: yuiName,
+            yuiAvatar: yuiAvatar,
+            text: text,
+            type: type,
+            timestamp: Date.now(),
+        });
+    };
+
     // スピーカーデータを生成
     const speakers: Speaker[] = participants
         .filter(p => p.isSpeaker || p.id === roomData?.hostId)
@@ -608,7 +676,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onStepDownMic={handleStepDownMic}
                 onToggleAutoGrant={handleToggleAutoGrant}
                 onRequestYuiSuggestions={yuiAssist.requestSuggestions}
-                onSelectYuiSuggestion={yuiAssist.speakSuggestion}
+                onSelectYuiSuggestion={handleYuiSpeechBroadcast}
             />
 
             {/* 参加者パネル */}
