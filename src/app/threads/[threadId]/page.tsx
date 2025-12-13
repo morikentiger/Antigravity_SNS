@@ -31,6 +31,8 @@ interface Reply {
     timestamp: number;
     authorType?: 'user' | 'yui';  // YUi返信かどうか
     masterUserId?: string;        // YUi返信の場合、マスターユーザーID
+    replyToId?: string;           // どの返信に対する返信か
+    replyToUserName?: string;     // 返信先のユーザー名
 }
 
 export default function ThreadDetailPage() {
@@ -56,7 +58,7 @@ export default function ThreadDetailPage() {
     } | null>(null);
     const [isLoadingYui, setIsLoadingYui] = useState(false);
     const [isPostingYui, setIsPostingYui] = useState(false);
-    const [yuiReplyTarget, setYuiReplyTarget] = useState<{ type: 'post' | 'reply'; content: string; userName?: string } | null>(null);
+    const [yuiReplyTarget, setYuiReplyTarget] = useState<{ type: 'post' | 'reply'; content: string; userName?: string; replyId?: string } | null>(null);
 
     useEffect(() => {
         if (!threadId) return;
@@ -182,7 +184,7 @@ export default function ThreadDetailPage() {
     const handleYuiAssistForReply = async (reply: Reply) => {
         setIsLoadingYui(true);
         setShowYuiModal(true);
-        setYuiReplyTarget({ type: 'reply', content: reply.content, userName: reply.userName });
+        setYuiReplyTarget({ type: 'reply', content: reply.content, userName: reply.userName, replyId: reply.id });
 
         try {
             const response = await fetch('/api/yui/assist', {
@@ -221,7 +223,7 @@ export default function ThreadDetailPage() {
             const yuiAvatar = userData?.yuiAvatar || '/yui-avatar.png';
 
             const repliesRef = ref(database, `threads/${threadId}/replies`);
-            await push(repliesRef, {
+            const replyData: any = {
                 content: content,
                 userId: user.uid,
                 userName: `${yuiName}（${userName}のYUi）`,
@@ -229,7 +231,15 @@ export default function ThreadDetailPage() {
                 timestamp: serverTimestamp(),
                 authorType: 'yui',
                 masterUserId: user.uid,
-            });
+            };
+
+            // 返信対象がある場合は参照情報を追加
+            if (yuiReplyTarget?.type === 'reply' && yuiReplyTarget.replyId) {
+                replyData.replyToId = yuiReplyTarget.replyId;
+                replyData.replyToUserName = yuiReplyTarget.userName;
+            }
+
+            await push(repliesRef, replyData);
 
             // スレッドのメタデータを更新
             const repliesSnapshot = await get(repliesRef);
@@ -377,7 +387,23 @@ export default function ThreadDetailPage() {
                 <div className={styles.repliesSection}>
                     <h2 className={styles.repliesTitle}>返信 ({replies.length})</h2>
                     {replies.map((reply) => (
-                        <div key={reply.id} className={styles.reply}>
+                        <div key={reply.id} id={`reply-${reply.id}`} className={styles.reply}>
+                            {/* 返信先リンク */}
+                            {reply.replyToId && reply.replyToUserName && (
+                                <button
+                                    className={styles.replyToLink}
+                                    onClick={() => {
+                                        const element = document.getElementById(`reply-${reply.replyToId}`);
+                                        if (element) {
+                                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            element.classList.add(styles.replyHighlight);
+                                            setTimeout(() => element.classList.remove(styles.replyHighlight), 2000);
+                                        }
+                                    }}
+                                >
+                                    ↩️ {reply.replyToUserName}さんへの返信
+                                </button>
+                            )}
                             <div className={styles.replyHeader}>
                                 <UserProfilePopup
                                     userId={reply.userId}
