@@ -7,6 +7,8 @@ import { useAuth } from '@/components/AuthContext';
 import { createPeer, getUserMedia, stopMediaStream } from '@/lib/webrtc';
 import Avatar from '@/components/common/Avatar';
 import Button from '@/components/common/Button';
+import YuiVoicePanel from './YuiVoicePanel';
+import { useYuiVoiceAssist } from './useYuiVoiceAssist';
 import styles from './RoomView.module.css';
 import type Peer from 'simple-peer';
 
@@ -29,6 +31,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const streamRef = useRef<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+
+    // YUi Voice Assist Hook
+    const yuiAssist = useYuiVoiceAssist();
 
 
     // 参加者リストの監視（表示用のみ。自動接続は行わない）
@@ -174,6 +179,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
             streamRef.current = stream;
             setIsConnected(true);
 
+            // YUi音声認識を開始（仕様4: STTで会話を検知）
+            yuiAssist.startListening(stream);
+
             // 自分の参加情報を登録
             const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
             await set(userRef, {
@@ -221,6 +229,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
     const leaveRoom = async () => {
         if (!user) return;
+
+        // YUi音声認識を停止（仕様5.4: 退出時の即停止）
+        yuiAssist.stopListening();
 
         if (streamRef.current) {
             stopMediaStream(streamRef.current);
@@ -316,6 +327,19 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     </>
                 )}
             </div>
+
+            {/* YUi Voice Panel（仕様8: フルフロー） */}
+            <YuiVoicePanel
+                isSupported={yuiAssist.isSupported}
+                isListening={isConnected}
+                isSpeaking={yuiAssist.isSpeaking}
+                isLoading={yuiAssist.isLoading}
+                suggestions={yuiAssist.suggestions}
+                error={yuiAssist.error}
+                onRequestSuggestions={yuiAssist.requestSuggestions}
+                onSelectSuggestion={yuiAssist.speakSuggestion}
+                onCancel={yuiAssist.reset}
+            />
         </div>
     );
 }
