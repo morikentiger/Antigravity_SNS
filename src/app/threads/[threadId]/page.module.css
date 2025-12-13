@@ -332,3 +332,153 @@
         padding: var(--space-md);
     }
 }
+
+/* YUi Assist Button */
+.yuiAssistButton {
+    width: 100%;
+    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, rgba(200, 100, 255, 0.15), rgba(100, 150, 255, 0.15));
+    border: 1px solid rgba(200, 100, 255, 0.3);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.yuiAssistButton:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(200, 100, 255, 0.25), rgba(100, 150, 255, 0.25));
+    border-color: rgba(200, 100, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.yuiAssistButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* YUi Modal */
+.yuiModal {
+    background: var(--color-bg-secondary);
+    border: 1px solid rgba(200, 100, 255, 0.3);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    max-width: 500px;
+    width: 100%;
+    animation: modalFadeIn 0.2s ease;
+}
+
+.yuiModalTitle {
+    margin: 0 0 var(--space-lg) 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: center;
+}
+
+.yuiModalLoading {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--space-xl) 0;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.yuiSuggestions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.yuiSuggestionItem {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+}
+
+.yuiLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.yuiContent {
+    margin: 0 0 var(--space-md) 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+}
+
+.yuiSelectButton {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(135deg, rgba(200, 100, 255, 0.2), rgba(100, 150, 255, 0.2));
+    border: 1px solid rgba(200, 100, 255, 0.4);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.yuiSelectButton:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(200, 100, 255, 0.3), rgba(100, 150, 255, 0.3));
+    transform: translateY(-1px);
+}
+
+.yuiSelectButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.yuiCloseButton {
+    width: 100%;
+    margin-top: var(--space-lg);
+    padding: var(--space-sm) var(--space-lg);
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.yuiCloseButton:hover {
+    background: var(--glass-bg);
+    color: var(--color-text-primary);
+}
+
+/* YUi Reply Badge */
+.yuiReplyBadge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(200, 100, 255, 0.2), rgba(100, 150, 255, 0.2));
+    border: 1px solid rgba(200, 100, 255, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 2px 6px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: rgba(200, 100, 255, 0.9);
+    margin-left: var(--space-xs);
+}

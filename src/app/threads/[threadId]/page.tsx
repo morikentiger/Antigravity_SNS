@@ -29,6 +29,8 @@ interface Reply {
     userName: string;
     userAvatar: string;
     timestamp: number;
+    authorType?: 'user' | 'yui';  // YUi返信かどうか
+    masterUserId?: string;        // YUi返信の場合、マスターユーザーID
 }
 
 export default function ThreadDetailPage() {
@@ -44,6 +46,16 @@ export default function ThreadDetailPage() {
     const [loading, setLoading] = useState(true);
     const [deleteReplyId, setDeleteReplyId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // YUi Assist states
+    const [showYuiModal, setShowYuiModal] = useState(false);
+    const [yuiSuggestions, setYuiSuggestions] = useState<{
+        summary: string;
+        emotion: string;
+        encourage: string;
+    } | null>(null);
+    const [isLoadingYui, setIsLoadingYui] = useState(false);
+    const [isPostingYui, setIsPostingYui] = useState(false);
 
     useEffect(() => {
         if (!threadId) return;
@@ -132,6 +144,84 @@ export default function ThreadDetailPage() {
             console.error('Error posting reply:', error);
         } finally {
             setIsPosting(false);
+        }
+    };
+
+    // YUi Assist機能
+    const handleYuiAssist = async () => {
+        if (!thread) return;
+
+        setIsLoadingYui(true);
+        setShowYuiModal(true);
+
+        try {
+            const response = await fetch('/api/yui/assist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `${thread.title}\n${thread.content}`
+                }),
+            });
+
+            if (!response.ok) throw new Error('API call failed');
+
+            const data = await response.json();
+            setYuiSuggestions(data);
+        } catch (error) {
+            console.error('YUi assist error:', error);
+            alert('YUiの提案を取得できませんでした');
+            setShowYuiModal(false);
+        } finally {
+            setIsLoadingYui(false);
+        }
+    };
+
+    const handleYuiReply = async (content: string) => {
+        if (!user || !threadId || !thread) return;
+
+        setIsPostingYui(true);
+        try {
+            // Firebase Realtime Databaseから最新のプロフィール情報を取得
+            const userDbRef = ref(database, `users/${user.uid}`);
+            const userSnapshot = await get(userDbRef);
+            const userData = userSnapshot.val();
+            const userName = userData?.displayName || user.displayName || 'Anonymous';
+
+            const repliesRef = ref(database, `threads/${threadId}/replies`);
+            await push(repliesRef, {
+                content: content,
+                userId: user.uid,
+                userName: `YUi（${userName}のナビ）`,
+                userAvatar: '/yui-avatar.png', // YUi専用アバター
+                timestamp: serverTimestamp(),
+                authorType: 'yui',
+                masterUserId: user.uid,
+            });
+
+            // スレッドのメタデータを更新
+            const repliesSnapshot = await get(repliesRef);
+            const repliesData = repliesSnapshot.val();
+            const actualReplyCount = repliesData ? Object.keys(repliesData).length : 0;
+
+            const threadRef = ref(database, `threads/${threadId}`);
+            const threadSnapshot = await get(threadRef);
+            const threadData = threadSnapshot.val();
+
+            if (threadData) {
+                await set(threadRef, {
+                    ...threadData,
+                    replyCount: actualReplyCount,
+                    lastReplyTime: Date.now(),
+                });
+            }
+
+            setShowYuiModal(false);
+            setYuiSuggestions(null);
+        } catch (error) {
+            console.error('Error posting YUi reply:', error);
+            alert('YUi返信の投稿に失敗しました');
+        } finally {
+            setIsPostingYui(false);
         }
     };
 
@@ -237,6 +327,17 @@ export default function ThreadDetailPage() {
                             <img src={thread.imageUrl} alt="スレッド画像" />
                         </div>
                     )}
+
+                    {/* YUi Assist Button */}
+                    {user && (
+                        <button
+                            className={styles.yuiAssistButton}
+                            onClick={handleYuiAssist}
+                            disabled={isLoadingYui}
+                        >
+                            ✨ YUiに一言補足してもらう
+                        </button>
+                    )}
                 </div>
 
                 {/* 返信一覧 */}
@@ -256,16 +357,19 @@ export default function ThreadDetailPage() {
                                     <p className={styles.replyUserName}>{reply.userName}</p>
                                     <p className={styles.replyTimestamp}>{formatTime(reply.timestamp)}</p>
                                 </div>
-                                {/* 返信主のみ削除ボタンを表示 */}
-                                {user && user.uid === reply.userId && (
-                                    <button
-                                        className={styles.deleteReplyButton}
-                                        onClick={() => setDeleteReplyId(reply.id)}
-                                        title="この返信を削除"
-                                    >
-                                        🗑️
-                                    </button>
-                                )}
+                                {/* 返信主またはYUi返信のマスターのみ削除ボタンを表示 */}
+                                {user && (
+                                    (user.uid === reply.userId) ||
+                                    (reply.authorType === 'yui' && user.uid === reply.masterUserId)
+                                ) && (
+                                        <button
+                                            className={styles.deleteReplyButton}
+                                            onClick={() => setDeleteReplyId(reply.id)}
+                                            title="この返信を削除"
+                                        >
+                                            🗑️
+                                        </button>
+                                    )}
                             </div>
                             <p className={styles.replyContent}>
                                 <Linkify>{reply.content}</Linkify>
@@ -321,6 +425,60 @@ export default function ThreadDetailPage() {
                                     {isDeleting ? '削除中...' : '削除する'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* YUi Assist Modal */}
+                {showYuiModal && (
+                    <div className={styles.modalOverlay} onClick={() => { setShowYuiModal(false); setYuiSuggestions(null); }}>
+                        <div className={styles.yuiModal} onClick={(e) => e.stopPropagation()}>
+                            <h3 className={styles.yuiModalTitle}>✨ YUiの提案</h3>
+                            {isLoadingYui ? (
+                                <p className={styles.yuiModalLoading}>考え中...</p>
+                            ) : yuiSuggestions ? (
+                                <div className={styles.yuiSuggestions}>
+                                    <div className={styles.yuiSuggestionItem}>
+                                        <span className={styles.yuiLabel}>📝 要約</span>
+                                        <p className={styles.yuiContent}>{yuiSuggestions.summary}</p>
+                                        <button
+                                            className={styles.yuiSelectButton}
+                                            onClick={() => handleYuiReply(yuiSuggestions.summary)}
+                                            disabled={isPostingYui}
+                                        >
+                                            これで返信
+                                        </button>
+                                    </div>
+                                    <div className={styles.yuiSuggestionItem}>
+                                        <span className={styles.yuiLabel}>💭 気持ち</span>
+                                        <p className={styles.yuiContent}>{yuiSuggestions.emotion}</p>
+                                        <button
+                                            className={styles.yuiSelectButton}
+                                            onClick={() => handleYuiReply(yuiSuggestions.emotion)}
+                                            disabled={isPostingYui}
+                                        >
+                                            これで返信
+                                        </button>
+                                    </div>
+                                    <div className={styles.yuiSuggestionItem}>
+                                        <span className={styles.yuiLabel}>🌟 応援</span>
+                                        <p className={styles.yuiContent}>{yuiSuggestions.encourage}</p>
+                                        <button
+                                            className={styles.yuiSelectButton}
+                                            onClick={() => handleYuiReply(yuiSuggestions.encourage)}
+                                            disabled={isPostingYui}
+                                        >
+                                            これで返信
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : null}
+                            <button
+                                className={styles.yuiCloseButton}
+                                onClick={() => { setShowYuiModal(false); setYuiSuggestions(null); }}
+                            >
+                                閉じる
+                            </button>
                         </div>
                     </div>
                 )}
