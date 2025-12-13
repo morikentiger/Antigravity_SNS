@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ref, onValue, push, serverTimestamp } from 'firebase/database';
+import { ref, onValue, push, set, serverTimestamp } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
+import { useRouter } from 'next/navigation';
 import RoomCard from './RoomCard';
 import Button from '@/components/common/Button';
 import styles from './RoomList.module.css';
@@ -22,7 +23,9 @@ export default function RoomList() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
     const [newRoomTopic, setNewRoomTopic] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
     const { user } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
         const roomsRef = ref(database, 'rooms');
@@ -36,11 +39,11 @@ export default function RoomList() {
                         : 0;
                     return {
                         id,
-                        name: room.name,
+                        name: room.name || room.title,
                         topic: room.topic,
                         participants: participantCount,
                         maxParticipants: room.maxParticipants || 10,
-                        createdBy: room.createdBy,
+                        createdBy: room.createdBy || room.hostId,
                     };
                 });
                 setRooms(roomsArray);
@@ -65,22 +68,45 @@ export default function RoomList() {
             return;
         }
 
+        setIsCreating(true);
+
         try {
             const roomsRef = ref(database, 'rooms');
-            await push(roomsRef, {
+            const newRoomRef = push(roomsRef);
+            const roomId = newRoomRef.key;
+
+            // ルームデータを作成（hostIdを設定）
+            await set(newRoomRef, {
                 name: newRoomName.trim(),
+                title: newRoomName.trim(),
                 topic: newRoomTopic.trim() || '自由に話そう',
+                hostId: user.uid,
                 createdBy: user.uid,
                 createdAt: serverTimestamp(),
                 maxParticipants: 10,
+                autoGrantMic: false,
             });
-            alert('ルームを作成しました！');
+
+            // ホストを参加者として登録（スピーカーとして）
+            const hostParticipantRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
+            await set(hostParticipantRef, {
+                name: user.displayName || 'Anonymous',
+                avatar: user.photoURL || '',
+                muted: false,
+                isSpeaker: true,
+            });
+
             setNewRoomName('');
             setNewRoomTopic('');
             setShowCreateModal(false);
+
+            // 作成したルームに直接遷移
+            router.push(`/rooms/${roomId}`);
         } catch (error: any) {
             console.error('Error creating room:', error);
             alert(`ルーム作成エラー: ${error.message}`);
+        } finally {
+            setIsCreating(false);
         }
     };
 

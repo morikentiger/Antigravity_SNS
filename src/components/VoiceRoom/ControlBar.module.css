@@ -1,0 +1,578 @@
+.controlBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(0, 0, 0, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* メッセージ入力エリア */
+.messageInputArea {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: var(--space-xs) var(--space-sm);
+}
+
+.messageInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.messageInput::placeholder {
+    color: var(--color-text-muted);
+}
+
+.imageButton,
+.sendButton,
+.cancelButton {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: opacity 0.2s ease;
+}
+
+.sendButton {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 16px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+}
+
+.sendButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cancelButton {
+    color: var(--color-text-muted);
+}
+
+.messageToggle {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 20px;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+
+.messageToggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* アクションボタン群 */
+.actionButtons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.actionButton {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.actionButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.actionButton.hasRequest {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
+.requestBadge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(0, 0, 0, 0.8);
+}
+
+/* メニューコンテナ（共通） */
+.menuContainer {
+    position: relative;
+}
+
+.popupMenu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: var(--space-sm);
+    background: rgba(30, 30, 40, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: var(--space-sm);
+    min-width: 180px;
+    z-index: var(--z-dropdown);
+    animation: menuFadeIn 0.2s ease;
+}
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.menuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+}
+
+.menuItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+
+.menuItem:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.micMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.closeMenuButton {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.autoGrantToggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+/* トグルスイッチ */
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggleSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.toggleSlider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle input:checked+.toggleSlider {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+}
+
+.toggle input:checked+.toggleSlider::before {
+    transform: translateX(20px);
+}
+
+.viewRequestsButton {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    padding: var(--space-sm);
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: var(--space-sm);
+    transition: background 0.2s ease;
+}
+
+.viewRequestsButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.requestCount {
+    color: #ef4444;
+    font-weight: 600;
+    margin-left: var(--space-xs);
+}
+
+/* マイクボタン */
+.micButton {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.micButton.unmuted {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+}
+
+.micButton.muted {
+    background: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.micButton:hover {
+    transform: scale(1.1);
+}
+
+.requestMicButton {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 20px;
+    padding: var(--space-sm) var(--space-md);
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.requestMicButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* YUi ボタン */
+.yuiButton,
+.yuiButtonSmall {
+    background: linear-gradient(135deg, #00d4ff, #00ff88);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.yuiButton {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+}
+
+.yuiButtonSmall {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.yuiButton:hover,
+.yuiButtonSmall:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+}
+
+/* メッセージトグルエリア（YUiボタン付き） */
+.messageToggleArea {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+}
+
+/* YUi モーダル */
+.yuiModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.yuiModalContent {
+    background: linear-gradient(135deg, rgba(0, 50, 100, 0.95), rgba(0, 80, 60, 0.95));
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 20px;
+    padding: var(--space-lg);
+    min-width: 300px;
+    max-width: 90vw;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.yuiModalHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    color: #fff;
+}
+
+.yuiModalIcon {
+    font-size: 1.5rem;
+}
+
+.yuiModalHeader button {
+    margin-left: auto;
+}
+
+.yuiModalBody {
+    min-height: 100px;
+}
+
+.yuiLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    color: rgba(0, 212, 255, 0.8);
+}
+
+.loadingDots::after {
+    content: '...';
+    animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+
+    0%,
+    20% {
+        content: '';
+    }
+
+    40% {
+        content: '.';
+    }
+
+    60% {
+        content: '..';
+    }
+
+    80%,
+    100% {
+        content: '...';
+    }
+}
+
+.yuiSuggestions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.yuiSuggestionItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.yuiSuggestionItem:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.5);
+    transform: translateX(4px);
+}
+
+.suggestionNumber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #00d4ff, #00ff88);
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.suggestionText {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.yuiNoSuggestion {
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .controlBar {
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .actionButton {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .micButton {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .messageToggle {
+        font-size: 0.8rem;
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .requestMicButton {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
+    }
+
+    .yuiModalContent {
+        min-width: 280px;
+        padding: var(--space-md);
+    }
+
+    .yuiButton {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .yuiButtonSmall {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+}

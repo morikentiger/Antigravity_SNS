@@ -1,22 +1,36 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ref, onValue, set, remove, push, onChildAdded } from 'firebase/database';
+import { ref, onValue, set, remove, push, onChildAdded, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { createPeer, getUserMedia, stopMediaStream } from '@/lib/webrtc';
-import Avatar from '@/components/common/Avatar';
-import Button from '@/components/common/Button';
+import { useRouter } from 'next/navigation';
+
+// New Components
+import RoomHeader from './RoomHeader';
+import CommentList, { Comment } from './CommentList';
+import SpeakerPanel, { Speaker } from './SpeakerPanel';
+import ControlBar from './ControlBar';
+import ParticipantPanel, { Participant } from './ParticipantPanel';
 import YuiVoicePanel from './YuiVoicePanel';
 import { useYuiVoiceAssist } from './useYuiVoiceAssist';
 import styles from './RoomView.module.css';
 import type Peer from 'simple-peer';
 
-interface Participant {
+interface RoomData {
+    title: string;
+    topic: string;
+    hostId: string;
+    autoGrantMic: boolean;
+}
+
+interface ParticipantData {
     id: string;
     name: string;
     avatar: string;
     muted: boolean;
+    isSpeaker: boolean;
 }
 
 interface RoomViewProps {
@@ -25,9 +39,17 @@ interface RoomViewProps {
 
 export default function RoomView({ roomId }: RoomViewProps) {
     const { user } = useAuth();
-    const [participants, setParticipants] = useState<Participant[]>([]);
+    const router = useRouter();
+    const [roomData, setRoomData] = useState<RoomData | null>(null);
+    const [participants, setParticipants] = useState<ParticipantData[]>([]);
+    const [comments, setComments] = useState<Comment[]>([]);
     const [isMuted, setIsMuted] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+    const [showParticipantPanel, setShowParticipantPanel] = useState(false);
+    const [micRequests, setMicRequests] = useState<{ userId: string; userName: string }[]>([]);
+    const [autoGrantMic, setAutoGrantMic] = useState(false);
+    const [topic, setTopic] = useState('');
+    const [yuiAvatar, setYuiAvatar] = useState<string>('');
     const streamRef = useRef<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
@@ -35,20 +57,61 @@ export default function RoomView({ roomId }: RoomViewProps) {
     // YUi Voice Assist Hook
     const yuiAssist = useYuiVoiceAssist();
 
+    // Check if current user is host
+    const isHost = roomData?.hostId === user?.uid;
 
-    // 参加者リストの監視（表示用のみ。自動接続は行わない）
+    // Check if current user is a speaker
+    const currentParticipant = participants.find(p => p.id === user?.uid);
+    const isSpeaker = currentParticipant?.isSpeaker || isHost;
+
+    // ルームデータの監視
+    useEffect(() => {
+        if (!user) return;
+
+        const roomRef = ref(database, `rooms/${roomId}`);
+        const unsubscribe = onValue(roomRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setRoomData({
+                    title: data.title || '音声ルーム',
+                    topic: data.topic || '',
+                    hostId: data.hostId || '',
+                    autoGrantMic: data.autoGrantMic || false,
+                });
+                setAutoGrantMic(data.autoGrantMic || false);
+                setTopic(data.topic || '');
+            }
+        });
+
+        return () => unsubscribe();
+    }, [roomId, user]);
+
+    // ユーザーのYUiアバターを取得
+    useEffect(() => {
+        if (!user) return;
+
+        const userRef = ref(database, `users/${user.uid}`);
+        get(userRef).then((snapshot) => {
+            const data = snapshot.val();
+            if (data?.yuiAvatar) {
+                setYuiAvatar(data.yuiAvatar);
+            }
+        }).catch(console.error);
+    }, [user]);
+
+    // 参加者リストの監視
     useEffect(() => {
         if (!user) return;
 
         const participantsRef = ref(database, `rooms/${roomId}/participants`);
-
         const unsubscribe = onValue(participantsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const participantsArray: Participant[] = Object.entries(data).map(
+                const participantsArray: ParticipantData[] = Object.entries(data).map(
                     ([id, participant]: [string, any]) => ({
                         id,
                         ...participant,
+                        isSpeaker: participant.isSpeaker || id === roomData?.hostId,
                     })
                 );
                 setParticipants(participantsArray);
@@ -58,10 +121,45 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
 
         return () => unsubscribe();
-    }, [roomId, user]);
+    }, [roomId, user, roomData?.hostId]);
+
+    // コメントの監視
+    useEffect(() => {
+        if (!user || !isConnected) return;
+
+        const commentsRef = ref(database, `rooms/${roomId}/comments`);
+        const unsubscribe = onChildAdded(commentsRef, (snapshot) => {
+            const comment = snapshot.val();
+            if (comment) {
+                setComments(prev => [...prev, { id: snapshot.key!, ...comment }]);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [roomId, user, isConnected]);
+
+    // マイク申請の監視（ホストのみ）
+    useEffect(() => {
+        if (!user || !isHost) return;
+
+        const requestsRef = ref(database, `rooms/${roomId}/micRequests`);
+        const unsubscribe = onValue(requestsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const requests = Object.entries(data).map(([userId, request]: [string, any]) => ({
+                    userId,
+                    userName: request.userName,
+                }));
+                setMicRequests(requests);
+            } else {
+                setMicRequests([]);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [roomId, user, isHost]);
 
     const playAudio = useCallback((userId: string, stream: MediaStream) => {
-        // 既存のオーディオ要素があれば、ストリームだけ更新
         if (audioElementsRef.current[userId]) {
             const existingAudio = audioElementsRef.current[userId];
             if (existingAudio.srcObject !== stream) {
@@ -70,7 +168,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
             return;
         }
 
-        // 新しいオーディオ要素を作成
         const audio = document.createElement('audio');
         audio.srcObject = stream;
         audio.autoplay = true;
@@ -82,17 +179,15 @@ export default function RoomView({ roomId }: RoomViewProps) {
         });
     }, []);
 
-    // ピア接続の管理（発信・着信共通）
+    // ピア接続の管理
     const connectToPeer = useCallback((peerId: string, initiator: boolean = true, incomingSignal?: any) => {
         if (!streamRef.current || !user) return;
 
-        // 既に接続済みの場合はスキップ（ただし、シグナル処理の場合は除く）
         if (peersRef.current[peerId] && !incomingSignal) {
             console.log('Already connected to:', peerId);
             return;
         }
 
-        // 既にピアがある状態でシグナルが来た場合は、そのピアにシグナルを渡す
         if (peersRef.current[peerId] && incomingSignal) {
             console.log('Passing signal to existing peer:', peerId);
             peersRef.current[peerId].signal(incomingSignal);
@@ -103,7 +198,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const peer = createPeer(initiator, streamRef.current);
 
         peer.on('signal', (signal) => {
-            // シグナル（Offer/Answer/ICE）が発生したら相手に送信
             const signalRef = push(ref(database, `rooms/${roomId}/signals`));
             set(signalRef, {
                 from: user.uid,
@@ -133,33 +227,25 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         peersRef.current[peerId] = peer;
 
-        // 着信（Responder）の場合、受け取ったOfferシグナルを適用
         if (!initiator && incomingSignal) {
             peer.signal(incomingSignal);
         }
     }, [user, roomId, playAudio]);
 
-
-    // WebRTC シグナリング（受信処理）
+    // WebRTC シグナリング
     useEffect(() => {
         if (!user || !isConnected) return;
 
         const signalsRef = ref(database, `rooms/${roomId}/signals`);
-
         const unsubscribe = onChildAdded(signalsRef, async (snapshot) => {
             const signal = snapshot.val();
             if (!signal || signal.from === user.uid) return;
-
-            // このシグナルが自分宛てかチェック（toがない場合は全員宛てだが、基本はtoがあるべき）
             if (signal.to && signal.to !== user.uid) return;
 
             try {
-                // 既存のピアがある、またはOfferを受け取った場合に処理
                 if (peersRef.current[signal.from]) {
-                    // 既存ピアにシグナルを適用
                     peersRef.current[signal.from].signal(signal.signal);
                 } else if (signal.signal.type === 'offer') {
-                    // 新しいOfferを受け取ったら、Responderとして接続を開始
                     console.log('Received offer from:', signal.from);
                     connectToPeer(signal.from, false, signal.signal);
                 }
@@ -171,6 +257,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user, isConnected, connectToPeer]);
 
+    // ホスト（既に参加者として登録済み）の自動接続
+    useEffect(() => {
+        if (!user || isConnected) return;
+
+        // 自分が既に参加者リストにいるかチェック
+        const alreadyParticipant = participants.find(p => p.id === user.uid);
+        if (alreadyParticipant && isHost) {
+            // ホストとして既に登録済みなら自動でマイク接続を開始
+            joinRoom();
+        }
+    }, [user, participants, isHost, isConnected]);
+
     const joinRoom = async () => {
         if (!user) return;
 
@@ -179,7 +277,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
             streamRef.current = stream;
             setIsConnected(true);
 
-            // YUi音声認識を開始（仕様4: STTで会話を検知）
             yuiAssist.startListening(stream);
 
             // 自分の参加情報を登録
@@ -188,49 +285,51 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 name: user.displayName || 'Anonymous',
                 avatar: user.photoURL || '',
                 muted: false,
+                isSpeaker: false, // デフォルトはリスナー
+            });
+
+            // 入室通知コメントを追加
+            const commentRef = push(ref(database, `rooms/${roomId}/comments`));
+            await set(commentRef, {
+                type: 'join',
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userAvatar: user.photoURL || '',
+                timestamp: Date.now(),
             });
 
             // 古いシグナルをクリーンアップ
             const signalsRef = ref(database, `rooms/${roomId}/signals`);
-            const signalsSnapshot = await onValue(signalsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    Object.entries(data).forEach(([key, signal]: [string, any]) => {
-                        if (signal.from === user.uid || signal.to === user.uid) {
-                            remove(ref(database, `rooms/${roomId}/signals/${key}`));
-                        }
-                    });
-                }
-            }, { onlyOnce: true });
-
-            // 既存の参加者全員に接続（新規参加者がInitiatorとなる）
-            const participantsSnapshot = await onValue(
-                ref(database, `rooms/${roomId}/participants`),
-                (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        Object.keys(data).forEach((participantId) => {
-                            if (participantId !== user.uid) {
-                                console.log('Joining: initiating connection to:', participantId);
-                                connectToPeer(participantId, true);
-                            }
-                        });
+            const signalsSnapshot = await get(signalsRef);
+            if (signalsSnapshot.exists()) {
+                const data = signalsSnapshot.val();
+                Object.entries(data).forEach(([key, signal]: [string, any]) => {
+                    if (signal.from === user.uid || signal.to === user.uid) {
+                        remove(ref(database, `rooms/${roomId}/signals/${key}`));
                     }
-                },
-                { onlyOnce: true }
-            );
+                });
+            }
 
+            // 既存の参加者全員に接続
+            const participantsSnapshot = await get(ref(database, `rooms/${roomId}/participants`));
+            if (participantsSnapshot.exists()) {
+                const data = participantsSnapshot.val();
+                Object.keys(data).forEach((participantId) => {
+                    if (participantId !== user.uid) {
+                        console.log('Joining: initiating connection to:', participantId);
+                        connectToPeer(participantId, true);
+                    }
+                });
+            }
         } catch (error) {
             console.error('Error joining room:', error);
             alert('マイクへのアクセスを許可してください');
         }
     };
 
-
     const leaveRoom = async () => {
         if (!user) return;
 
-        // YUi音声認識を停止（仕様5.4: 退出時の即停止）
         yuiAssist.stopListening();
 
         if (streamRef.current) {
@@ -238,13 +337,11 @@ export default function RoomView({ roomId }: RoomViewProps) {
             streamRef.current = null;
         }
 
-        // すべてのピア接続を破棄
         Object.values(peersRef.current).forEach((peer) => {
             peer.destroy();
         });
         peersRef.current = {};
 
-        // すべてのオーディオ要素を削除
         Object.values(audioElementsRef.current).forEach((audio) => {
             audio.srcObject = null;
             audio.remove();
@@ -254,6 +351,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
         await remove(userRef);
         setIsConnected(false);
+        setComments([]);
     };
 
     const toggleMute = () => {
@@ -271,6 +369,144 @@ export default function RoomView({ roomId }: RoomViewProps) {
         }
     };
 
+    // Handlers
+    const handleMinimize = () => {
+        // 音声ルームを維持したまま他の画面へ
+        router.push('/');
+    };
+
+    const handleLeave = () => {
+        leaveRoom();
+    };
+
+    const handleSettings = () => {
+        // TODO: 設定メニューを表示
+        console.log('Open settings');
+    };
+
+    const handleSendMessage = async (message: string) => {
+        if (!user || !message.trim()) return;
+
+        const commentRef = push(ref(database, `rooms/${roomId}/comments`));
+        await set(commentRef, {
+            type: 'message',
+            userId: user.uid,
+            userName: user.displayName || 'Anonymous',
+            userAvatar: user.photoURL || '',
+            content: message,
+            timestamp: Date.now(),
+        });
+    };
+
+    const handleSendImage = () => {
+        // TODO: 画像送信機能
+        console.log('Send image');
+    };
+
+    const handleSharePost = () => {
+        // TODO: 投稿でシェア
+        console.log('Share via post');
+    };
+
+    const handleShareDM = () => {
+        // TODO: DMでシェア
+        console.log('Share via DM');
+    };
+
+    const handleGame = (gameId: string) => {
+        // TODO: ゲーム画面へ遷移（音声ルーム維持）
+        console.log('Open game:', gameId);
+    };
+
+    const handleRequestMic = async () => {
+        if (!user) return;
+
+        const requestRef = ref(database, `rooms/${roomId}/micRequests/${user.uid}`);
+        await set(requestRef, {
+            userName: user.displayName || 'Anonymous',
+            timestamp: Date.now(),
+        });
+    };
+
+    const handleOpenMicRequests = () => {
+        // TODO: マイク申請リストを表示
+        console.log('Open mic requests', micRequests);
+    };
+
+    const handleToggleAutoGrant = async (enabled: boolean) => {
+        if (!isHost) return;
+
+        const roomRef = ref(database, `rooms/${roomId}/autoGrantMic`);
+        await set(roomRef, enabled);
+        setAutoGrantMic(enabled);
+    };
+
+    const handleTopicChange = async (newTopic: string) => {
+        if (!isHost) return;
+
+        const topicRef = ref(database, `rooms/${roomId}/topic`);
+        await set(topicRef, newTopic);
+        setTopic(newTopic);
+    };
+
+    const handleWelcome = async (userId: string, userName: string) => {
+        if (!user) return;
+
+        const commentRef = push(ref(database, `rooms/${roomId}/comments`));
+        await set(commentRef, {
+            type: 'message',
+            userId: user.uid,
+            userName: user.displayName || 'Anonymous',
+            userAvatar: user.photoURL || '',
+            content: `${userName}さん、ようこそ！`,
+            timestamp: Date.now(),
+        });
+    };
+
+    const handleAvatarClick = (userId: string) => {
+        // TODO: プロフィールページへ遷移
+        console.log('Navigate to profile:', userId);
+    };
+
+    const handleKick = async (userId: string) => {
+        if (!isHost) return;
+        // TODO: ユーザーを退出させる
+        console.log('Kick user:', userId);
+    };
+
+    const handleGrantMic = async (userId: string) => {
+        if (!isHost) return;
+
+        const participantRef = ref(database, `rooms/${roomId}/participants/${userId}/isSpeaker`);
+        await set(participantRef, true);
+
+        // 申請リストから削除
+        const requestRef = ref(database, `rooms/${roomId}/micRequests/${userId}`);
+        await remove(requestRef);
+    };
+
+    // スピーカーデータを生成
+    const speakers: Speaker[] = participants
+        .filter(p => p.isSpeaker || p.id === roomData?.hostId)
+        .map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            muted: p.muted,
+            isSpeaking: !p.muted, // TODO: 実際の音声検知
+            isHost: p.id === roomData?.hostId,
+            hasYui: true, // TODO: YUi割り当てロジック
+        }));
+
+    // 参加者データを生成
+    const allParticipants: Participant[] = participants.map(p => ({
+        id: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        isHost: p.id === roomData?.hostId,
+        isSpeaker: p.isSpeaker || p.id === roomData?.hostId,
+    }));
+
     useEffect(() => {
         return () => {
             if (streamRef.current) {
@@ -286,54 +522,102 @@ export default function RoomView({ roomId }: RoomViewProps) {
         };
     }, []);
 
-    return (
-        <div className={styles.room}>
-            <div className={styles.participants}>
-                {participants.map((participant) => (
-                    <div key={participant.id} className={styles.participant}>
-                        <Avatar src={participant.avatar} alt={participant.name} size="lg" />
-                        <div className={styles.participantInfo}>
-                            <span className={styles.participantName}>{participant.name}</span>
-                            {participant.muted && (
-                                <span className={styles.mutedBadge}>ミュート中</span>
-                            )}
-                        </div>
-                        <div className={`${styles.audioIndicator} ${!participant.muted ? styles.active : ''}`}>
-                            <div className={styles.audioBar}></div>
-                            <div className={styles.audioBar}></div>
-                            <div className={styles.audioBar}></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className={styles.controls}>
-                {!isConnected ? (
+    // 未接続時のUI
+    if (!isConnected) {
+        return (
+            <div className={styles.room}>
+                <RoomHeader
+                    title={roomData?.title || '音声ルーム'}
+                    onMinimize={handleMinimize}
+                    onLeave={() => router.back()}
+                    onSettings={handleSettings}
+                />
+                <div className={styles.joinContainer}>
+                    <h2 className={styles.joinTitle}>{roomData?.title || '音声ルーム'}</h2>
+                    <p className={styles.joinDescription}>参加者: {participants.length}人</p>
                     <button
                         onClick={joinRoom}
-                        className={`${styles.controlButton} ${styles.join}`}
+                        className={styles.joinButton}
                     >
-                        ▶ 参加
+                        🎤 参加する
                     </button>
-                ) : (
-                    <>
-                        <button
-                            onClick={toggleMute}
-                            className={`${styles.controlButton} ${isMuted ? styles.muted : styles.primary}`}
-                        >
-                            {isMuted ? '🔇' : '🎤'}
-                        </button>
-                        <button
-                            onClick={leaveRoom}
-                            className={styles.controlButton}
-                        >
-                            退出
-                        </button>
-                    </>
-                )}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.room}>
+            {/* ヘッダー */}
+            <RoomHeader
+                title={roomData?.title || '音声ルーム'}
+                onMinimize={handleMinimize}
+                onLeave={handleLeave}
+                onSettings={handleSettings}
+            />
+
+            {/* メインエリア */}
+            <div className={styles.mainArea}>
+                <div className={styles.commentArea}>
+                    <CommentList
+                        comments={comments}
+                        currentUserId={user?.uid || ''}
+                        topic={topic}
+                        isHost={isHost}
+                        onTopicChange={handleTopicChange}
+                        onWelcome={handleWelcome}
+                        onAvatarClick={handleAvatarClick}
+                    />
+                </div>
+
+                {/* 右側: スピーカーエリア (2/5) */}
+                <div
+                    className={styles.speakerArea}
+                    onClick={() => setShowParticipantPanel(true)}
+                >
+                    <SpeakerPanel
+                        speakers={speakers}
+                        onAvatarClick={handleAvatarClick}
+                        onEmptySlotClick={() => setShowParticipantPanel(true)}
+                    />
+                </div>
             </div>
 
-            {/* YUi Voice Panel（仕様8: フルフロー） */}
+            <ControlBar
+                isHost={isHost}
+                isSpeaker={isSpeaker}
+                isMuted={isMuted}
+                hasMicRequest={micRequests.length > 0}
+                micRequestCount={micRequests.length}
+                autoGrantMic={autoGrantMic}
+                yuiSuggestions={yuiAssist.suggestions}
+                isYuiLoading={yuiAssist.isLoading}
+                yuiAvatar={yuiAvatar}
+                onSendMessage={handleSendMessage}
+                onSendImage={handleSendImage}
+                onSharePost={handleSharePost}
+                onShareDM={handleShareDM}
+                onGame={handleGame}
+                onToggleMute={toggleMute}
+                onRequestMic={handleRequestMic}
+                onOpenMicRequests={handleOpenMicRequests}
+                onToggleAutoGrant={handleToggleAutoGrant}
+                onRequestYuiSuggestions={yuiAssist.requestSuggestions}
+                onSelectYuiSuggestion={yuiAssist.speakSuggestion}
+            />
+
+            {/* 参加者パネル */}
+            <ParticipantPanel
+                isVisible={showParticipantPanel}
+                isHost={isHost}
+                participants={allParticipants}
+                onClose={() => setShowParticipantPanel(false)}
+                onKick={handleKick}
+                onGrantMic={handleGrantMic}
+                onAvatarClick={handleAvatarClick}
+            />
+
+            {/* YUi Voice Panel */}
             <YuiVoicePanel
                 isSupported={yuiAssist.isSupported}
                 isListening={isConnected}

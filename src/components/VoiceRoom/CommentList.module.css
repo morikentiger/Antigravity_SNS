@@ -1,0 +1,316 @@
+.commentList {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+/* トピックエリア */
+.topicArea {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.topicDisplay {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.topicDisplay:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.topicDisplay:disabled {
+    cursor: default;
+}
+
+.topicLabel {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.topicText {
+    flex: 1;
+    color: var(--color-text-primary);
+}
+
+.editHint {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.topicEditor {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.topicInput {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(100, 200, 255, 0.5);
+    border-radius: 12px;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+}
+
+.topicInput:focus {
+    outline: none;
+    border-color: rgba(100, 200, 255, 0.8);
+}
+
+/* コメントスクロールエリア */
+.commentsScroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* フローティングウェルカムメッセージ - 改良版 */
+.floatingWelcome {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, rgba(255, 100, 200, 0.95), rgba(150, 100, 255, 0.95));
+    color: #fff;
+    padding: var(--space-lg) var(--space-xl);
+    border-radius: 24px;
+    z-index: var(--z-toast);
+    animation: welcomeFadeInOut 3s ease forwards;
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.welcomeAvatar {
+    flex-shrink: 0;
+}
+
+.welcomeContent {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+}
+
+.welcomeName {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.welcomeText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.welcomeLine {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcomeLine:first-child {
+    color: #fff;
+}
+
+.welcomeLine:last-child {
+    color: #ffd700;
+}
+
+@keyframes welcomeFadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    20% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.8);
+    }
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.commentItem {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 入室通知 */
+.joinNotification {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: rgba(100, 200, 255, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(100, 200, 255, 0.2);
+}
+
+.joinContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.joinText {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.welcomeButton {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    border: none;
+    border-radius: 16px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.welcomeButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 150, 150, 0.4);
+}
+
+/* 通常コメント */
+.messageItem {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: flex-start;
+}
+
+.avatarButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.avatarButton:hover {
+    transform: scale(1.1);
+}
+
+.messageContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.messageHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.userName {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.timestamp {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+}
+
+.messageBubble {
+    background: linear-gradient(135deg, rgba(180, 150, 255, 0.8), rgba(200, 180, 255, 0.6));
+    padding: var(--space-sm) var(--space-md);
+    border-radius: 18px;
+    border-top-left-radius: 4px;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+    .topicArea {
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .topicDisplay {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.8rem;
+    }
+
+    .commentsScroll {
+        padding: var(--space-sm);
+    }
+
+    .floatingWelcome {
+        padding: var(--space-md) var(--space-lg);
+        gap: var(--space-md);
+    }
+
+    .welcomeLine {
+        font-size: 1.5rem;
+    }
+
+    .messageBubble {
+        max-width: 95%;
+        font-size: 0.85rem;
+    }
+}
