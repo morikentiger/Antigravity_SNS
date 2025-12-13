@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
+import { ref as dbRef, get, set } from 'firebase/database';
+import { database } from '@/lib/firebase';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
 import styles from './ProfileEditModal.module.css';
@@ -17,6 +19,7 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
     const { user } = useAuth();
     const [displayName, setDisplayName] = useState('');
     const [photoURL, setPhotoURL] = useState('');
+    const [yuiName, setYuiName] = useState('YUi');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -27,6 +30,16 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
             setDisplayName(user.displayName || '');
             setPhotoURL(user.photoURL || '');
             setMessage(null);
+            // FirebaseからyuiNameを取得
+            const userDbRef = dbRef(database, `users/${user.uid}`);
+            get(userDbRef).then((snapshot) => {
+                const data = snapshot.val();
+                if (data?.yuiName) {
+                    setYuiName(data.yuiName);
+                } else {
+                    setYuiName('YUi');
+                }
+            });
         }
     }, [isOpen, user]);
 
@@ -89,6 +102,19 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
             await import('@/lib/userUtils').then(({ updateUserProfileImages }) =>
                 updateUserProfileImages(user.uid, photoURL, newDisplayName)
             );
+
+            // Firebase Realtime DatabaseにyuiNameも保存
+            const userDbRef = dbRef(database, `users/${user.uid}`);
+            const existingSnapshot = await get(userDbRef);
+            const existingData = existingSnapshot.val() || {};
+            await set(userDbRef, {
+                ...existingData,
+                displayName: newDisplayName,
+                photoURL: photoURL,
+                yuiName: yuiName.trim() || 'YUi',
+                email: user.email,
+                updatedAt: Date.now(),
+            });
 
             setMessage({ type: 'success', text: 'プロフィールを更新しました' });
             setTimeout(() => {
@@ -156,6 +182,24 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
                                 placeholder="あなたの名前"
                                 required
                             />
+                        </div>
+
+                        <div>
+                            <label htmlFor="yuiName" className="block text-sm font-medium text-gray-300 mb-2">
+                                ✨ あなたのYUiの名前
+                            </label>
+                            <input
+                                id="yuiName"
+                                type="text"
+                                value={yuiName}
+                                onChange={(e) => setYuiName(e.target.value)}
+                                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                placeholder="YUi"
+                                maxLength={20}
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                                YUiが返信するときの名前です（例: ゆい、ナビちゃん）
+                            </p>
                         </div>
 
                         {message && (
