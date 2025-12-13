@@ -3,6 +3,7 @@
     flex-direction: column;
     gap: var(--space-xs);
     padding: var(--space-sm) var(--space-md);
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom, 20px));
     background: rgba(0, 0, 0, 0.7);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
