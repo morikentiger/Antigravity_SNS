@@ -195,7 +195,7 @@ export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalPr
     };
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.overlay} onClick={cropImageSrc ? undefined : onClose}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <button className={styles.closeButton} onClick={onClose} aria-label="閉じる">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
