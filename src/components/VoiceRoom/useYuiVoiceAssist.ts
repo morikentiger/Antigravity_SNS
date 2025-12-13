@@ -88,13 +88,11 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
         if (!vadRef.current || !sttRef.current) return;
 
         // VAD: 音量検知開始
-        vadRef.current.start(stream, (isActive, _volume) => {
-            if (isActive && ttsRef.current?.getIsSpeaking()) {
-                // 他者発話検知 → TTS即停止（仕様4.2）
-                console.log('Voice detected, stopping TTS');
-                ttsRef.current.stop();
-                setIsSpeaking(false);
-            }
+        // 注意: TTS発話中は自分の音声を検知してしまうため、
+        // VADによる停止は無効化する（STTイベントで代用）
+        vadRef.current.start(stream, (_isActive, _volume) => {
+            // TTS発話中は無視（自分の音声を誤検知するため）
+            // 他者発話による停止はSTTイベントで検知する
         });
 
         // STT: 音声認識開始

@@ -101,14 +101,55 @@
 
 .controls {
     display: flex;
-    gap: var(--space-md);
+    gap: var(--space-sm);
     justify-content: center;
-    padding: var(--space-lg);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+}
+
+/* ミニマルボタン */
+.controlButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.75rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.controlButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.controlButton.primary {
+    background: rgba(100, 200, 255, 0.15);
+    border-color: rgba(100, 200, 255, 0.3);
+    color: rgba(150, 220, 255, 1);
+}
+
+.controlButton.primary:hover {
+    background: rgba(100, 200, 255, 0.25);
+}
+
+.controlButton.muted {
+    background: rgba(255, 100, 100, 0.1);
+    border-color: rgba(255, 100, 100, 0.3);
+    color: rgba(255, 150, 150, 1);
+}
+
+.controlButton.join {
+    background: rgba(100, 255, 150, 0.15);
+    border-color: rgba(100, 255, 150, 0.3);
+    color: rgba(150, 255, 180, 1);
 }
 
 @media (max-width: 768px) {
@@ -117,6 +158,11 @@
     }
 
     .controls {
-        flex-direction: column;
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .controlButton {
+        font-size: 0.7rem;
+        padding: var(--space-xs) var(--space-sm);
     }
 }

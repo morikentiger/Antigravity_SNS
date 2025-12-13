@@ -1,54 +1,48 @@
 .panel {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--space-md);
-    margin-top: var(--space-md);
+    background: transparent;
+    border: none;
+    padding: var(--space-xs);
+    margin-top: var(--space-sm);
 }
 
 /* ============================================
-   Trigger Button (🤍 ナビ一言)
+   Trigger Button (🤍 ナビ一言) - ミニマル
    ============================================ */
 
 .triggerButton {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
-    width: 100%;
-    padding: var(--space-md) var(--space-lg);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-lg);
-    color: var(--color-text-primary);
-    font-size: 1rem;
-    font-weight: 500;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: all var(--transition-fast);
 }
 
 .triggerButton:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .triggerButton:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .triggerIcon {
-    font-size: 1.2rem;
+    font-size: 0.9rem;
 }
 
 .loadingSpinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: var(--color-text-primary);
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--color-text-secondary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }

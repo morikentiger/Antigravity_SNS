@@ -309,21 +309,26 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
             <div className={styles.controls}>
                 {!isConnected ? (
-                    <Button onClick={joinRoom} variant="primary" size="lg">
-                        参加する
-                    </Button>
+                    <button
+                        onClick={joinRoom}
+                        className={`${styles.controlButton} ${styles.join}`}
+                    >
+                        ▶ 参加
+                    </button>
                 ) : (
                     <>
-                        <Button
+                        <button
                             onClick={toggleMute}
-                            variant={isMuted ? 'secondary' : 'primary'}
-                            size="lg"
+                            className={`${styles.controlButton} ${isMuted ? styles.muted : styles.primary}`}
                         >
-                            {isMuted ? '🔇 ミュート解除' : '🎤 ミュート'}
-                        </Button>
-                        <Button onClick={leaveRoom} variant="secondary" size="lg">
+                            {isMuted ? '🔇' : '🎤'}
+                        </button>
+                        <button
+                            onClick={leaveRoom}
+                            className={styles.controlButton}
+                        >
                             退出
-                        </Button>
+                        </button>
                     </>
                 )}
             </div>
