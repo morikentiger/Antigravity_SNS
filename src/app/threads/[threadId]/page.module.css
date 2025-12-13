@@ -120,12 +120,131 @@
     color: var(--color-text-muted);
 }
 
+.replyUserInfo {
+    flex: 1;
+}
+
 .replyContent {
     margin: 0;
     line-height: 1.6;
     color: var(--color-text-primary);
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+/* 返信削除ボタン */
+.deleteReplyButton {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: var(--space-xs);
+    opacity: 0.5;
+    transition: all var(--transition-base);
+    border-radius: var(--radius-sm);
+}
+
+.deleteReplyButton:hover {
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* 削除確認モーダル */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-lg);
+}
+
+.modal {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    max-width: 400px;
+    width: 100%;
+    animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modalTitle {
+    margin: 0 0 var(--space-md) 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.modalText {
+    margin: 0 0 var(--space-lg) 0;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.modalActions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+}
+
+.modalCancelButton {
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text-primary);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.modalCancelButton:hover:not(:disabled) {
+    background: var(--color-bg-secondary);
+}
+
+.modalCancelButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modalDeleteButton {
+    background: #ef4444;
+    border: none;
+    color: white;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.modalDeleteButton:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+.modalDeleteButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .replyForm {

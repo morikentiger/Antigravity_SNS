@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ref, onValue, push, serverTimestamp, get, set } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, get, set, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import UserProfilePopup from '@/components/common/UserProfilePopup';
@@ -42,6 +42,8 @@ export default function ThreadDetailPage() {
     const [replyContent, setReplyContent] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [deleteReplyId, setDeleteReplyId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (!threadId) return;
@@ -133,6 +135,40 @@ export default function ThreadDetailPage() {
         }
     };
 
+    const handleDeleteReply = async (replyId: string) => {
+        if (!threadId || isDeleting) return;
+
+        setIsDeleting(true);
+        try {
+            // 返信を削除
+            const replyRef = ref(database, `threads/${threadId}/replies/${replyId}`);
+            await remove(replyRef);
+
+            // スレッドの返信数を更新
+            const repliesRef = ref(database, `threads/${threadId}/replies`);
+            const repliesSnapshot = await get(repliesRef);
+            const repliesData = repliesSnapshot.val();
+            const actualReplyCount = repliesData ? Object.keys(repliesData).length : 0;
+
+            const threadRef = ref(database, `threads/${threadId}`);
+            const threadSnapshot = await get(threadRef);
+            const threadData = threadSnapshot.val();
+
+            if (threadData) {
+                await set(threadRef, {
+                    ...threadData,
+                    replyCount: actualReplyCount,
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting reply:', error);
+            alert('返信の削除に失敗しました');
+        } finally {
+            setIsDeleting(false);
+            setDeleteReplyId(null);
+        }
+    };
+
     const formatTime = (timestamp: number) => {
         const date = new Date(timestamp);
         return date.toLocaleString('ja-JP', {
@@ -216,10 +252,20 @@ export default function ThreadDetailPage() {
                                     size="sm"
                                     currentUserId={user?.uid}
                                 />
-                                <div>
+                                <div className={styles.replyUserInfo}>
                                     <p className={styles.replyUserName}>{reply.userName}</p>
                                     <p className={styles.replyTimestamp}>{formatTime(reply.timestamp)}</p>
                                 </div>
+                                {/* 返信主のみ削除ボタンを表示 */}
+                                {user && user.uid === reply.userId && (
+                                    <button
+                                        className={styles.deleteReplyButton}
+                                        onClick={() => setDeleteReplyId(reply.id)}
+                                        title="この返信を削除"
+                                    >
+                                        🗑️
+                                    </button>
+                                )}
                             </div>
                             <p className={styles.replyContent}>
                                 <Linkify>{reply.content}</Linkify>
@@ -250,6 +296,32 @@ export default function ThreadDetailPage() {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                )}
+
+                {/* 削除確認モーダル */}
+                {deleteReplyId && (
+                    <div className={styles.modalOverlay} onClick={() => setDeleteReplyId(null)}>
+                        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                            <h3 className={styles.modalTitle}>返信を削除しますか？</h3>
+                            <p className={styles.modalText}>この操作は取り消せません。</p>
+                            <div className={styles.modalActions}>
+                                <button
+                                    className={styles.modalCancelButton}
+                                    onClick={() => setDeleteReplyId(null)}
+                                    disabled={isDeleting}
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    className={styles.modalDeleteButton}
+                                    onClick={() => handleDeleteReply(deleteReplyId)}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? '削除中...' : '削除する'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
