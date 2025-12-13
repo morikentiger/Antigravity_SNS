@@ -27,6 +27,7 @@ export interface UseYuiVoiceAssistReturn {
     isSpeaking: boolean;
     isLoading: boolean;
     suggestions: YuiSuggestions | null;
+    capturedContext: string | null;  // 取得したSTT結果を表示用に公開
     error: string | null;
 
     // Actions
@@ -54,6 +55,7 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<YuiSuggestions | null>(null);
+    const [capturedContext, setCapturedContext] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     // 最後のコンテキスト（メモリ上のみ）
@@ -127,9 +129,13 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
 
             // コンテキストがない場合はデフォルトのプロンプトを使用
             // ただしAPIは必ず呼び出す（生成させる）
-            const promptContent = context && context.trim().length > 0
+            const hasRealContext = context && context.trim().length > 0;
+            const promptContent = hasRealContext
                 ? context
                 : '（音声ルームで会話中。会話の様子を見守っている状況）';
+
+            // 表示用にコンテキストを保存
+            setCapturedContext(hasRealContext ? context : null);
 
             const response = await fetch('/api/yui/assist', {
                 method: 'POST',
@@ -193,6 +199,7 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
         sttRef.current?.clearBuffer();
         lastContextRef.current = '';
         setSuggestions(null);
+        setCapturedContext(null);
         setIsSpeaking(false);
         setIsLoading(false);
         setError(null);
@@ -204,6 +211,7 @@ export function useYuiVoiceAssist(): UseYuiVoiceAssistReturn {
         isSpeaking,
         isLoading,
         suggestions,
+        capturedContext,
         error,
         startListening,
         stopListening,

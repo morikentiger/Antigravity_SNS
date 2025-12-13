@@ -76,6 +76,37 @@
     margin: 0;
 }
 
+/* Context Box (聞いた内容) */
+.contextBox {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.contextLabel {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    display: block;
+    margin-bottom: var(--space-xs);
+}
+
+.contextText {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.contextTextMuted {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    font-style: italic;
+}
+
 .suggestionButtons {
     display: flex;
     flex-direction: column;

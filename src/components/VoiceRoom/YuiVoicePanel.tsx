@@ -10,6 +10,7 @@ interface YuiVoicePanelProps {
     isSpeaking: boolean;
     isLoading: boolean;
     suggestions: YuiSuggestions | null;
+    capturedContext: string | null;
     error: string | null;
     onRequestSuggestions: () => void;
     onSelectSuggestion: (type: SuggestionType) => void;
@@ -22,6 +23,7 @@ export default function YuiVoicePanel({
     isSpeaking,
     isLoading,
     suggestions,
+    capturedContext,
     error,
     onRequestSuggestions,
     onSelectSuggestion,
@@ -61,6 +63,15 @@ export default function YuiVoicePanel({
             {/* 候補表示中の場合 */}
             {!isSpeaking && suggestions && (
                 <div className={styles.suggestionsState}>
+                    {/* 聞いた内容の表示 */}
+                    <div className={styles.contextBox}>
+                        <span className={styles.contextLabel}>👂 聞いた内容:</span>
+                        {capturedContext ? (
+                            <p className={styles.contextText}>「{capturedContext}」</p>
+                        ) : (
+                            <p className={styles.contextTextMuted}>（会話が取得できませんでした）</p>
+                        )}
+                    </div>
                     <p className={styles.suggestionsLabel}>YUiの一言を選んでね</p>
                     <div className={styles.suggestionButtons}>
                         <button
