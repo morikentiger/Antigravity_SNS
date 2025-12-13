@@ -448,18 +448,56 @@ export default function RoomView({ roomId }: RoomViewProps) {
     };
 
     const handleSharePost = () => {
-        // TODO: 投稿でシェア
-        console.log('Share via post');
+        // 投稿でシェア - 投稿画面に遷移してルームリンクを含める
+        const roomUrl = `${window.location.origin}/rooms/${roomId}`;
+        const shareText = `🎙️ 音声ルーム「${roomData?.title || '音声ルーム'}」に参加しよう！\n${roomUrl}`;
+
+        // ローカルストレージに一時保存して投稿画面で使用
+        localStorage.setItem('sharedRoomContent', shareText);
+
+        // 新しいタブで投稿ページを開く（音声ルームを維持）
+        window.open('/?compose=true', '_blank');
     };
 
     const handleShareDM = () => {
-        // TODO: DMでシェア
-        console.log('Share via DM');
+        // DMでシェア - クリップボードにコピーしてDMページへ
+        const roomUrl = `${window.location.origin}/rooms/${roomId}`;
+        const shareText = `🎙️ 音声ルーム「${roomData?.title || '音声ルーム'}」に参加しよう！\n${roomUrl}`;
+
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('ルームリンクをコピーしました！\nDMに貼り付けてシェアできます。');
+            // 新しいタブでDMページを開く
+            window.open('/messages', '_blank');
+        }).catch(() => {
+            alert('コピーに失敗しました');
+        });
     };
 
     const handleGame = (gameId: string) => {
-        // TODO: ゲーム画面へ遷移（音声ルーム維持）
-        console.log('Open game:', gameId);
+        // ゲーム画面を新しいタブで開く
+        let gameUrl = '';
+        switch (gameId) {
+            case 'summon-shogi':
+                gameUrl = 'https://morikentiger.github.io/SummonShogi/';
+                break;
+            case 'quiz':
+                // TODO: クイズゲームURL
+                alert('クイズゲームは準備中です');
+                return;
+            case 'word-chain':
+                // TODO: しりとりゲームURL
+                alert('しりとりゲームは準備中です');
+                return;
+            case 'drawing':
+                // TODO: お絵描きゲームURL
+                alert('お絵描きゲームは準備中です');
+                return;
+            default:
+                return;
+        }
+
+        // 新しいタブでゲームを開く
+        window.open(gameUrl, '_blank');
     };
 
     const handleRequestMic = async () => {
