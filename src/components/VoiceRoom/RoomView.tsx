@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ref, onValue, set, remove, push, onChildAdded, get, onChildRemoved } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { ref, onValue, set, remove, push, onChildAdded, get, onChildRemoved, query, limitToLast } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { database, storage } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { createPeer, getUserMedia, stopMediaStream } from '@/lib/webrtc';
 import { SpeechSynthesisService } from '@/lib/speechServices';
@@ -10,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 // New Components
 import RoomHeader from './RoomHeader';
-import CommentList, { Comment } from './CommentList';
+import CommentList, { Comment, WelcomeEvent } from './CommentList';
 import SpeakerPanel, { Speaker } from './SpeakerPanel';
 import ControlBar from './ControlBar';
 import ParticipantPanel, { Participant } from './ParticipantPanel';
@@ -51,7 +52,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [topic, setTopic] = useState('');
     const [yuiAvatar, setYuiAvatar] = useState<string>('');
     const [yuiName, setYuiName] = useState<string>('YUi');
+    const [welcomeEvent, setWelcomeEvent] = useState<WelcomeEvent | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
@@ -112,12 +115,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
         };
     }, [user]);
 
-    // 参加者リストの監視
+    // 参加者、コメント、その他の監視（ホスト以外も共通）
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isConnected) return;
 
+        // 参加者リストの監視
         const participantsRef = ref(database, `rooms/${roomId}/participants`);
-        const unsubscribe = onValue(participantsRef, (snapshot) => {
+        const unsubscribeParticipants = onValue(participantsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 const participantsArray: ParticipantData[] = Object.entries(data).map(
@@ -133,22 +137,50 @@ export default function RoomView({ roomId }: RoomViewProps) {
             }
         });
 
-        return () => unsubscribe();
-    }, [roomId, user, roomData?.hostId]);
-
-    // コメントの監視
-    useEffect(() => {
-        if (!user || !isConnected) return;
-
+        // コメントの監視
         const commentsRef = ref(database, `rooms/${roomId}/comments`);
-        const unsubscribe = onChildAdded(commentsRef, (snapshot) => {
+        const unsubscribeComments = onChildAdded(commentsRef, (snapshot) => {
             const comment = snapshot.val();
             if (comment) {
                 setComments(prev => [...prev, { id: snapshot.key!, ...comment }]);
             }
         });
 
-        return () => unsubscribe();
+        // YUi発話の監視（他ユーザーのYUi発話を再生）
+        const yuiSpeechRef = ref(database, `rooms/${roomId}/yuiSpeech`);
+        const yuiQuery = query(yuiSpeechRef, limitToLast(1));
+        const unsubscribeYuiSpeech = onChildAdded(yuiQuery, (snapshot) => {
+            const data = snapshot.val();
+            if (Date.now() - data.timestamp < 5000) {
+                // 自分以外のYUi発話のみ再生（自分はローカルで再生済み）
+                if (data.speakerId !== user.uid) {
+                    otherYuiTtsRef.current?.speak(data.text);
+                }
+                // データを受信したら削除（重複再生防止）
+                remove(ref(database, `rooms/${roomId}/yuiSpeech/${snapshot.key}`)).catch(() => { });
+            }
+        });
+
+        // ウェルカムイベントの監視
+        const welcomeRef = ref(database, `rooms/${roomId}/welcomeEvents`);
+        const welcomeQuery = query(welcomeRef, limitToLast(1));
+        const unsubscribeWelcome = onChildAdded(welcomeQuery, (snapshot) => {
+            const data = snapshot.val();
+            // 5秒以内のイベントのみ処理
+            if (Date.now() - data.timestamp < 5000) {
+                setWelcomeEvent({
+                    id: snapshot.key || '',
+                    ...data
+                });
+            }
+        });
+
+        return () => {
+            unsubscribeParticipants();
+            unsubscribeComments();
+            unsubscribeYuiSpeech();
+            unsubscribeWelcome();
+        };
     }, [roomId, user, isConnected]);
 
     // マイク申請の監視（ホストのみ）
@@ -443,8 +475,37 @@ export default function RoomView({ roomId }: RoomViewProps) {
     };
 
     const handleSendImage = () => {
-        // TODO: 画像送信機能
-        console.log('Send image');
+        // 画像選択ダイアログを表示
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        try {
+            // Storageにアップロード
+            const imageRef = storageRef(storage, `room-images/${roomId}/${Date.now()}_${file.name}`);
+            await uploadBytes(imageRef, file);
+            const imageUrl = await getDownloadURL(imageRef);
+
+            // コメントとして送信
+            const commentRef = push(ref(database, `rooms/${roomId}/comments`));
+            await set(commentRef, {
+                type: 'image',
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userAvatar: user.photoURL || '',
+                imageUrl: imageUrl,
+                timestamp: Date.now(),
+            });
+
+            // 入力をクリア
+            e.target.value = '';
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('画像の送信に失敗しました');
+        }
     };
 
     const handleSharePost = () => {
@@ -526,9 +587,10 @@ export default function RoomView({ roomId }: RoomViewProps) {
         setTopic(newTopic);
     };
 
-    const handleWelcome = async (userId: string, userName: string) => {
+    const handleWelcome = async (userId: string, userName: string, userAvatar: string) => {
         if (!user) return;
 
+        // ウェルカムメッセージをコメントとして送信
         const commentRef = push(ref(database, `rooms/${roomId}/comments`));
         await set(commentRef, {
             type: 'message',
@@ -536,6 +598,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
             userName: user.displayName || 'Anonymous',
             userAvatar: user.photoURL || '',
             content: `${userName}さん、ようこそ！`,
+            timestamp: Date.now(),
+        });
+
+        // ウェルカムイベントを送信（全員にエフェクトを表示するため）
+        const eventRef = push(ref(database, `rooms/${roomId}/welcomeEvents`));
+        await set(eventRef, {
+            recipientId: userId,
+            recipientName: userName,
+            recipientAvatar: userAvatar,
+            senderId: user.uid,
+            senderName: user.displayName || 'Anonymous',
+            senderAvatar: user.photoURL || '',
             timestamp: Date.now(),
         });
     };
@@ -673,6 +747,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                         currentUserAvatar={user?.photoURL || ''}
                         topic={topic}
                         isHost={isHost}
+                        welcomeEvent={welcomeEvent}
                         onTopicChange={handleTopicChange}
                         onWelcome={handleWelcome}
                         onAvatarClick={handleAvatarClick}
@@ -728,6 +803,15 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onKick={handleKick}
                 onGrantMic={handleGrantMic}
                 onAvatarClick={handleAvatarClick}
+            />
+
+            {/* 画像送信用の隠し入力 */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*"
+                onChange={handleFileChange}
             />
         </div>
     );

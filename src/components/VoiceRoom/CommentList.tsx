@@ -1,16 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@/components/common/Avatar';
 import styles from './CommentList.module.css';
 
 export interface Comment {
     id: string;
-    type: 'message' | 'join';
+    type: 'message' | 'join' | 'image';
     userId: string;
     userName: string;
     userAvatar: string;
     content?: string;
+    imageUrl?: string;
+    timestamp: number;
+}
+
+export interface WelcomeEvent {
+    id: string;
+    recipientId: string;
+    recipientName: string;
+    recipientAvatar: string;
+    senderId: string;
+    senderName: string;
+    senderAvatar: string;
     timestamp: number;
 }
 
@@ -28,8 +40,9 @@ interface CommentListProps {
     currentUserAvatar: string;
     topic: string;
     isHost: boolean;
+    welcomeEvent: WelcomeEvent | null; // 同期用のウェルカムイベント
     onTopicChange: (topic: string) => void;
-    onWelcome: (userId: string, userName: string) => void;
+    onWelcome: (userId: string, userName: string, userAvatar: string) => void;
     onAvatarClick: (userId: string) => void;
 }
 
@@ -40,6 +53,7 @@ export default function CommentList({
     currentUserAvatar,
     topic,
     isHost,
+    welcomeEvent,
     onTopicChange,
     onWelcome,
     onAvatarClick,
@@ -54,21 +68,37 @@ export default function CommentList({
         return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
     };
 
-    const handleWelcome = (userId: string, userName: string, userAvatar: string) => {
-        if (welcomedUsers.has(userId)) return;
+    // 外部からのウェルカムイベントを検知して表示
+    useEffect(() => {
+        if (!welcomeEvent) return;
 
-        setWelcomedUsers(prev => new Set(prev).add(userId));
+        // イベントが自分のウェルカムアクションですでに表示済みの場合はスキップ
+        // しかし、Firebase経由のイベントを正とするため、必ず表示する方針に変更
+        // ローカルでの即時表示は廃止し、すべてFirebase同期経由にする
+
         setFloatingWelcome({
-            recipientName: userName,
-            recipientAvatar: userAvatar,
-            senderName: currentUserName,
-            senderAvatar: currentUserAvatar,
+            recipientName: welcomeEvent.recipientName,
+            recipientAvatar: welcomeEvent.recipientAvatar,
+            senderName: welcomeEvent.senderName,
+            senderAvatar: welcomeEvent.senderAvatar,
         });
-        onWelcome(userId, userName);
 
-        setTimeout(() => {
+        // 自分が送った相手ならwelcomedUsersに追加
+        if (welcomeEvent.senderId === currentUserId) {
+            setWelcomedUsers(prev => new Set(prev).add(welcomeEvent.recipientId));
+        }
+
+        const timer = setTimeout(() => {
             setFloatingWelcome(null);
         }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [welcomeEvent, currentUserId]);
+
+    const handleWelcomeClick = (userId: string, userName: string, userAvatar: string) => {
+        if (welcomedUsers.has(userId)) return;
+        // 親コンポーネント経由でFirebaseに送信
+        onWelcome(userId, userName, userAvatar);
     };
 
     const handleTopicSave = () => {
@@ -172,7 +202,7 @@ export default function CommentList({
                                 {comment.userId !== currentUserId && !welcomedUsers.has(comment.userId) && (
                                     <button
                                         className={styles.welcomeButton}
-                                        onClick={() => handleWelcome(comment.userId, comment.userName, comment.userAvatar)}
+                                        onClick={() => handleWelcomeClick(comment.userId, comment.userName, comment.userAvatar)}
                                         type="button"
                                     >
                                         👋 ようこそ
@@ -198,9 +228,21 @@ export default function CommentList({
                                         <span className={styles.userName}>{comment.userName}</span>
                                         <span className={styles.timestamp}>{formatTimestamp(comment.timestamp)}</span>
                                     </div>
-                                    <div className={styles.messageBubble}>
-                                        {comment.content}
-                                    </div>
+                                    {comment.type === 'image' && comment.imageUrl ? (
+                                        <div className={styles.imageBubble}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={comment.imageUrl}
+                                                alt="送信された画像"
+                                                className={styles.commentImage}
+                                                onClick={() => window.open(comment.imageUrl, '_blank')}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className={styles.messageBubble}>
+                                            {comment.content}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
