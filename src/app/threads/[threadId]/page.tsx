@@ -186,12 +186,13 @@ export default function ThreadDetailPage() {
             const userSnapshot = await get(userDbRef);
             const userData = userSnapshot.val();
             const userName = userData?.displayName || user.displayName || 'Anonymous';
+            const yuiName = userData?.yuiName || 'YUi';
 
             const repliesRef = ref(database, `threads/${threadId}/replies`);
             await push(repliesRef, {
                 content: content,
                 userId: user.uid,
-                userName: `YUi（${userName}のナビ）`,
+                userName: `${yuiName}（${userName}のナビ）`,
                 userAvatar: '/yui-avatar.png', // YUi専用アバター
                 timestamp: serverTimestamp(),
                 authorType: 'yui',

@@ -17,6 +17,7 @@ export default function ProfilePage() {
     const router = useRouter();
     const [displayName, setDisplayName] = useState('');
     const [photoURL, setPhotoURL] = useState('');
+    const [yuiName, setYuiName] = useState('YUi');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -28,6 +29,16 @@ export default function ProfilePage() {
         } else if (user) {
             setDisplayName(user.displayName || '');
             setPhotoURL(user.photoURL || '');
+            // FirebaseからyuiNameを取得
+            const userDbRef = dbRef(database, `users/${user.uid}`);
+            import('firebase/database').then(({ get }) => {
+                get(userDbRef).then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data?.yuiName) {
+                        setYuiName(data.yuiName);
+                    }
+                });
+            });
         }
     }, [user, loading, router]);
 
@@ -88,6 +99,7 @@ export default function ProfilePage() {
             const userData = {
                 displayName: newDisplayName,
                 photoURL: photoURL,
+                yuiName: yuiName.trim() || 'YUi',
                 email: user.email,
                 updatedAt: Date.now(),
             };
@@ -159,6 +171,24 @@ export default function ProfilePage() {
                                 placeholder="あなたの名前"
                                 required
                             />
+                        </div>
+
+                        <div>
+                            <label htmlFor="yuiName" className="block text-sm font-medium text-gray-300 mb-2">
+                                ✨ あなたのYUiの名前
+                            </label>
+                            <input
+                                id="yuiName"
+                                type="text"
+                                value={yuiName}
+                                onChange={(e) => setYuiName(e.target.value)}
+                                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                placeholder="YUi"
+                                maxLength={20}
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                                YUiが返信するときの名前です（例: ゆい、ナビちゃん）
+                            </p>
                         </div>
 
                         {message && (
