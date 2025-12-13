@@ -287,30 +287,73 @@
 }
 
 @media (max-width: 768px) {
+    .commentList {
+        font-size: 0.7rem;
+    }
+
     .topicArea {
         padding: var(--space-xs) var(--space-sm);
     }
 
     .topicDisplay {
-        padding: var(--space-xs) var(--space-sm);
-        font-size: 0.8rem;
+        padding: 4px 8px;
+        font-size: 0.65rem;
+        gap: 4px;
+    }
+
+    .topicLabel {
+        font-size: 0.6rem;
     }
 
     .commentsScroll {
-        padding: var(--space-sm);
+        padding: var(--space-xs);
+        gap: var(--space-xs);
     }
 
     .floatingWelcome {
-        padding: var(--space-md) var(--space-lg);
-        gap: var(--space-md);
+        padding: var(--space-sm);
+        gap: var(--space-sm);
     }
 
     .welcomeLine {
-        font-size: 1.5rem;
+        font-size: 1rem;
+    }
+
+    .welcomeAvatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .welcomeName {
+        font-size: 0.7rem;
+    }
+
+    .messageItem {
+        gap: 4px;
     }
 
     .messageBubble {
         max-width: 95%;
-        font-size: 0.85rem;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+
+    .messageAuthor {
+        font-size: 0.6rem;
+    }
+
+    .joinNotification {
+        padding: 4px 8px;
+        gap: 4px;
+    }
+
+    .joinText {
+        font-size: 0.65rem;
+    }
+
+    .welcomeButton {
+        padding: 2px 6px;
+        font-size: 0.6rem;
     }
 }

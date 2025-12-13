@@ -183,17 +183,66 @@
 
 @media (max-width: 768px) {
     .panel {
-        padding: var(--space-sm);
+        padding: var(--space-xs);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .speakerGrid {
+        gap: var(--space-xs);
+    }
+
+    .speakerRow {
+        gap: 4px;
+    }
+
+    .speakerSlot {
+        gap: 2px;
     }
 
     .emptySlot {
-        width: 48px;
-        height: 48px;
+        width: 32px;
+        height: 32px;
+        border-width: 1px;
+    }
+
+    .plusIcon {
+        font-size: 0.9rem;
     }
 
     .yuiAvatar {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+        border-width: 1px;
+    }
+
+    .slotNumber {
+        font-size: 0.55rem;
+    }
+
+    .hostNumber {
+        font-size: 0.7rem;
+    }
+
+    .mutedBadge {
+        width: 14px;
+        height: 14px;
+        font-size: 0.5rem;
+        border-width: 1px;
+    }
+
+    .guestSection {
+        padding-top: var(--space-xs);
+        gap: 4px;
+    }
+
+    .guestLabel {
+        font-size: 0.6rem;
+    }
+
+    .addMemberButton {
+        padding: 4px 8px;
+        font-size: 0.6rem;
+        border-radius: 4px;
     }
 }

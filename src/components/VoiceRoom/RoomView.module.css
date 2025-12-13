@@ -231,19 +231,24 @@
 }
 
 @media (max-width: 768px) {
+    .room {
+        font-size: 0.75rem;
+    }
+
     .mainArea {
-        flex-direction: column;
+        flex-direction: row;
+        /* 横並びを維持 */
     }
 
     .commentArea {
-        flex: 1;
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex: 2;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
     }
 
     .speakerArea {
-        flex: none;
-        height: 200px;
+        flex: 1;
+        min-width: 100px;
     }
 
     .participants {
@@ -255,11 +260,20 @@
     }
 
     .controlButton {
-        font-size: 0.7rem;
-        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.6rem;
+        padding: 4px 8px;
     }
 
     .joinTitle {
-        font-size: 1.2rem;
+        font-size: 1rem;
+    }
+
+    .joinDescription {
+        font-size: 0.7rem;
+    }
+
+    .joinButton {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.85rem;
     }
 }
