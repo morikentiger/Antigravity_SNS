@@ -669,6 +669,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     <CommentList
                         comments={comments}
                         currentUserId={user?.uid || ''}
+                        currentUserName={user?.displayName || 'Anonymous'}
+                        currentUserAvatar={user?.photoURL || ''}
                         topic={topic}
                         isHost={isHost}
                         onTopicChange={handleTopicChange}

@@ -15,13 +15,17 @@ export interface Comment {
 }
 
 interface WelcomeFloatData {
-    userName: string;
-    userAvatar: string;
+    recipientName: string;
+    recipientAvatar: string;
+    senderName: string;
+    senderAvatar: string;
 }
 
 interface CommentListProps {
     comments: Comment[];
     currentUserId: string;
+    currentUserName: string;
+    currentUserAvatar: string;
     topic: string;
     isHost: boolean;
     onTopicChange: (topic: string) => void;
@@ -32,6 +36,8 @@ interface CommentListProps {
 export default function CommentList({
     comments,
     currentUserId,
+    currentUserName,
+    currentUserAvatar,
     topic,
     isHost,
     onTopicChange,
@@ -52,7 +58,12 @@ export default function CommentList({
         if (welcomedUsers.has(userId)) return;
 
         setWelcomedUsers(prev => new Set(prev).add(userId));
-        setFloatingWelcome({ userName, userAvatar });
+        setFloatingWelcome({
+            recipientName: userName,
+            recipientAvatar: userAvatar,
+            senderName: currentUserName,
+            senderAvatar: currentUserAvatar,
+        });
         onWelcome(userId, userName);
 
         setTimeout(() => {
@@ -107,22 +118,29 @@ export default function CommentList({
                 )}
             </div>
 
-            {/* フローティングウェルカムメッセージ - 改良版 */}
+            {/* フローティングウェルカムメッセージ - 送信者と受信者を表示 */}
             {floatingWelcome && (
                 <div className={styles.floatingWelcome}>
-                    <div className={styles.welcomeAvatar}>
+                    <div className={styles.welcomeSender}>
                         <Avatar
-                            src={floatingWelcome.userAvatar}
-                            alt={floatingWelcome.userName}
+                            src={floatingWelcome.senderAvatar}
+                            alt={floatingWelcome.senderName}
+                            size="md"
+                        />
+                        <span className={styles.senderName}>{floatingWelcome.senderName}</span>
+                    </div>
+                    <div className={styles.welcomeArrow}>→</div>
+                    <div className={styles.welcomeRecipient}>
+                        <Avatar
+                            src={floatingWelcome.recipientAvatar}
+                            alt={floatingWelcome.recipientName}
                             size="lg"
                         />
+                        <span className={styles.welcomeName}>{floatingWelcome.recipientName}</span>
                     </div>
-                    <div className={styles.welcomeContent}>
-                        <span className={styles.welcomeName}>{floatingWelcome.userName}</span>
-                        <div className={styles.welcomeText}>
-                            <span className={styles.welcomeLine}>WEL</span>
-                            <span className={styles.welcomeLine}>COME</span>
-                        </div>
+                    <div className={styles.welcomeText}>
+                        <span className={styles.welcomeLine}>WEL</span>
+                        <span className={styles.welcomeLine}>COME</span>
                     </div>
                 </div>
             )}
