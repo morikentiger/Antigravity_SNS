@@ -600,7 +600,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
             name: p.name,
             avatar: p.avatar,
             muted: p.muted,
-            isSpeaking: !p.muted, // TODO: 実際の音声検知
+            isSpeaking: false, // 実際の音声検知が必要な場合はFirebase経由で同期
             isHost: p.id === roomData?.hostId,
             hasYui: true, // TODO: YUi割り当てロジック
         }));
