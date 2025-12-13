@@ -349,6 +349,57 @@
     z-index: 1;
 }
 
+.creditCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-lg) var(--space-md);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+    min-width: 140px;
+}
+
+.creditCard:hover {
+    transform: translateY(-6px) scale(1.03);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+}
+
+.creditUser {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.creditDivider {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1rem;
+    font-weight: 300;
+    margin: var(--space-xs) 0;
+}
+
+.creditYui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.yuiName {
+    font-size: 0.75rem;
+    color: rgba(200, 100, 255, 0.9);
+    font-weight: 500;
+}
+
 .creditItem {
     display: flex;
     flex-direction: column;

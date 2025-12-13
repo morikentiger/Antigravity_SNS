@@ -25,6 +25,8 @@ interface Developer {
     id: string;
     displayName: string;
     photoURL: string;
+    yuiName?: string;
+    yuiAvatar?: string;
 }
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -85,8 +87,9 @@ export default function RankingPage() {
     // 開発者一覧を取得（スレッドから参加者を集める）
     useEffect(() => {
         const threadsRef = ref(database, 'threads');
+        const usersRef = ref(database, 'users');
 
-        const unsubscribe = onValue(threadsRef, (snapshot) => {
+        const unsubscribe = onValue(threadsRef, async (snapshot) => {
             const data = snapshot.val();
             const developersMap = new Map<string, Developer>();
 
@@ -101,10 +104,10 @@ export default function RankingPage() {
                         });
                     }
 
-                    // 返信者も追加
+                    // 返信者も追加（YUi返信は除外）
                     if (thread.replies) {
                         Object.values(thread.replies).forEach((reply: any) => {
-                            if (reply.userId && reply.userName) {
+                            if (reply.userId && reply.userName && reply.authorType !== 'yui') {
                                 developersMap.set(reply.userId, {
                                     id: reply.userId,
                                     displayName: reply.userName,
@@ -112,6 +115,21 @@ export default function RankingPage() {
                                 });
                             }
                         });
+                    }
+                });
+            }
+
+            // 各ユーザーのYUi情報を取得
+            const usersSnapshot = await new Promise<any>((resolve) => {
+                onValue(usersRef, (snap) => resolve(snap.val()), { onlyOnce: true });
+            });
+
+            if (usersSnapshot) {
+                developersMap.forEach((dev, userId) => {
+                    const userData = usersSnapshot[userId];
+                    if (userData) {
+                        dev.yuiName = userData.yuiName || 'YUi';
+                        dev.yuiAvatar = userData.yuiAvatar || '';
                     }
                 });
             }
@@ -277,12 +295,19 @@ export default function RankingPage() {
                         {developers.map((dev, index) => (
                             <div
                                 key={dev.id}
-                                className={styles.creditItem}
+                                className={styles.creditCard}
                                 style={{ animationDelay: `${index * 0.1}s` }}
                                 onClick={() => router.push(`/profile/${dev.id}`)}
                             >
-                                <Avatar src={dev.photoURL} alt={dev.displayName} size="md" />
-                                <span className={styles.creditName}>{dev.displayName}</span>
+                                <div className={styles.creditUser}>
+                                    <Avatar src={dev.photoURL} alt={dev.displayName} size="lg" />
+                                    <span className={styles.creditName}>{dev.displayName}</span>
+                                </div>
+                                <div className={styles.creditDivider}>+</div>
+                                <div className={styles.creditYui}>
+                                    <Avatar src={dev.yuiAvatar || '/yui-avatar.png'} alt={dev.yuiName || 'YUi'} size="md" />
+                                    <span className={styles.yuiName}>{dev.yuiName || 'YUi'}</span>
+                                </div>
                             </div>
                         ))}
                     </div>
