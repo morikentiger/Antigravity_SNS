@@ -41,6 +41,10 @@ export async function updateUserProfileImages(
             if (thread.replies) {
                 Object.keys(thread.replies).forEach((replyId) => {
                     const reply = thread.replies[replyId];
+                    // Skip YUi replies - they should keep their YUi avatar
+                    if (reply.authorType === 'yui') {
+                        return;
+                    }
                     if (reply.userId === userId) {
                         updates[`threads/${threadId}/replies/${replyId}/userAvatar`] = newPhotoURL;
                         if (newDisplayName) {
