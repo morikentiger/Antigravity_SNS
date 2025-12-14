@@ -315,18 +315,25 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const source = audioContext.createMediaStreamSource(localStream);
         source.connect(analyser);
 
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const dataArray = new Uint8Array(analyser.fftSize); // fftSizeをdataArrayのサイズに合わせる
         let animationId: number;
         let lastSpeakTime = 0;
         let isSpeakingState = false;
 
         const update = () => {
-            analyser.getByteFrequencyData(dataArray);
-            const sum = dataArray.reduce((a, b) => a + b, 0);
-            const average = sum / dataArray.length;
+            analyser.getByteTimeDomainData(dataArray);
 
-            // 閾値: 環境によるが10-20程度で調整
-            const isNowSpeaking = average > 10;
+            // RMS (Root Mean Square) を計算して音量を取得
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                const x = dataArray[i] - 128; // 128が中心（無音）
+                sum += x * x;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+
+            // 閾値: RMS 2〜3以上で反応するように調整 (以前はFrequency平均>10だった)
+            // 感度を上げて、小さな声でも光るようにする
+            const isNowSpeaking = rms > 3;
 
             if (isNowSpeaking) {
                 lastSpeakTime = Date.now();
