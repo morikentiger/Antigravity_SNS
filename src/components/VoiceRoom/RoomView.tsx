@@ -296,17 +296,21 @@ export default function RoomView({ roomId }: RoomViewProps) {
     }, [isSpeaker, isMuted, localStream]);
 
     // リスナーになったらストリームを完全停止
+    // ただしホストは常にスピーカーなのでクリーンアップ対象外
     useEffect(() => {
         // マイク初期化中はクリーンアップしない (DB反映待ちの可能性があるため)
         if (micInitializingRef.current) return;
 
+        // ホストは常にスピーカー権限を持つため、このクリーンアップの対象外
+        if (isHost) return;
+
         if (!isSpeaker && localStream) {
-            console.log('Stopping stream because !isSpeaker');
+            console.log('Stopping stream because !isSpeaker (non-host)');
             stopMediaStream(localStream);
             setLocalStream(null);
             streamRef.current = null;
         }
-    }, [isSpeaker, localStream]);
+    }, [isSpeaker, localStream, isHost]);
 
     // VAD (Voice Activity Detection) - 音声検知
     useEffect(() => {
