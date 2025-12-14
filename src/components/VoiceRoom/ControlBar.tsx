@@ -374,16 +374,14 @@ export default function ControlBar({
                             >
                                 {isMuted ? '🔇' : '🎙️'}
                             </button>
-                            {!isHost && (
-                                <button
-                                    className={styles.stepDownButton}
-                                    onClick={onStepDownMic}
-                                    type="button"
-                                    title="マイクを降りる"
-                                >
-                                    ⬇️
-                                </button>
-                            )}
+                            <button
+                                className={styles.stepDownButton}
+                                onClick={onStepDownMic}
+                                type="button"
+                                title="マイクを降りる"
+                            >
+                                ⬇️
+                            </button>
                         </div>
                     ) : (
                         <button

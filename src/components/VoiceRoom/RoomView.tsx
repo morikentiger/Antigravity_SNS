@@ -96,7 +96,6 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [roomData, setRoomData] = useState<RoomData | null>(null);
     const [participants, setParticipants] = useState<ParticipantData[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
-    const [isMuted, setIsMuted] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [showParticipantPanel, setShowParticipantPanel] = useState(false);
     const [micRequests, setMicRequests] = useState<{ userId: string; userName: string }[]>([]);
@@ -118,10 +117,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
     // Check if current user is host
     const isHost = roomData?.hostId === user?.uid;
 
-    // Check if current user is a speaker
     const currentParticipant = participants.find(p => p.id === user?.uid);
-    const isSpeaker = currentParticipant?.isSpeaker || isHost;
-
+    const isSpeaker = !!currentParticipant?.isSpeaker;
+    const isMuted = !!currentParticipant?.muted;
     // ルームデータの監視
     useEffect(() => {
         if (!user) return;
@@ -181,7 +179,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     ([id, participant]: [string, any]) => ({
                         id,
                         ...participant,
-                        isSpeaker: participant.isSpeaker || id === roomData?.hostId,
+                        isSpeaker: participant.isSpeaker,
                     })
                 );
                 setParticipants(participantsArray);
@@ -284,7 +282,16 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 track.enabled = shouldBeEnabled;
             }
         });
-    }, [isSpeaker, isMuted, localStream]); // streamRef.current depends on localStream updates
+    }, [isSpeaker, isMuted, localStream]);
+
+    // リスナーになったらストリームを完全停止
+    useEffect(() => {
+        if (!isSpeaker && localStream) {
+            stopMediaStream(localStream);
+            setLocalStream(null);
+            streamRef.current = null;
+        }
+    }, [isSpeaker, localStream]);
 
     // VAD (Voice Activity Detection) - 音声検知
     useEffect(() => {
@@ -606,7 +613,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const audioTrack = streamRef.current.getAudioTracks()[0];
         if (audioTrack) {
             audioTrack.enabled = !audioTrack.enabled;
-            setIsMuted(!audioTrack.enabled);
+            // Removed setIsMuted call
 
             if (user) {
                 const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}/muted`);
@@ -829,10 +836,20 @@ export default function RoomView({ roomId }: RoomViewProps) {
     };
 
     const handleStepDownMic = async () => {
-        if (!user || isHost) return; // ホストはマイクを降りれない
+        if (!user) return;
 
         const participantRef = ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaker`);
         await set(participantRef, false);
+    };
+
+    const handleRevokeMic = async (userId: string) => {
+        if (!isHost) return;
+
+        const participantRef = ref(database, `rooms/${roomId}/participants/${userId}/isSpeaker`);
+        await set(participantRef, false);
+
+        const requestRef = ref(database, `rooms/${roomId}/micRequests/${userId}`);
+        await remove(requestRef);
     };
 
     // YUi発話を選択した時：ローカルTTS + Firebase経由で他の人に送信
@@ -877,7 +894,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         name: p.name,
         avatar: p.avatar,
         isHost: p.id === roomData?.hostId,
-        isSpeaker: p.isSpeaker || p.id === roomData?.hostId,
+        isSpeaker: p.isSpeaker,
     }));
 
     useEffect(() => {
@@ -994,6 +1011,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 onClose={() => setShowParticipantPanel(false)}
                 onKick={handleKick}
                 onGrantMic={handleGrantMic}
+                onRevokeMic={handleRevokeMic}
                 onAvatarClick={handleAvatarClick}
             />
 

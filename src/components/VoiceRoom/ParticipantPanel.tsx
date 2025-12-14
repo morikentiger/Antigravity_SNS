@@ -19,6 +19,7 @@ interface ParticipantPanelProps {
     onClose: () => void;
     onKick: (userId: string) => void;
     onGrantMic: (userId: string) => void;
+    onRevokeMic: (userId: string) => void;
     onAvatarClick: (userId: string) => void;
 }
 
@@ -29,6 +30,7 @@ export default function ParticipantPanel({
     onClose,
     onKick,
     onGrantMic,
+    onRevokeMic,
     onAvatarClick,
 }: ParticipantPanelProps) {
     if (!isVisible) return null;
@@ -78,7 +80,7 @@ export default function ParticipantPanel({
                             {/* ホストのみ表示：管理ボタン */}
                             {isHost && !participant.isHost && (
                                 <div className={styles.adminButtons}>
-                                    {!participant.isSpeaker && (
+                                    {!participant.isSpeaker ? (
                                         <button
                                             className={styles.grantMicButton}
                                             onClick={() => onGrantMic(participant.id)}
@@ -86,6 +88,15 @@ export default function ParticipantPanel({
                                             title="マイクを付与"
                                         >
                                             🎤
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className={styles.stepDownButton}
+                                            onClick={() => onRevokeMic(participant.id)}
+                                            type="button"
+                                            title="マイクを取り消す"
+                                        >
+                                            ⬇️
                                         </button>
                                     )}
                                     <button
