@@ -554,6 +554,10 @@ export default function RoomView({ roomId }: RoomViewProps) {
             console.error(`Peer error with ${peerId}:`, err);
         });
 
+        peer.on('connect', () => {
+            console.log(`✅ [WebRTC] Connection ESTABLISHED with ${peerId}`);
+        });
+
         peer.on('close', () => {
             console.log(`Connection with ${peerId} closed`);
             delete peersRef.current[peerId];
@@ -572,9 +576,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         peersRef.current[peerId] = peer;
 
-        if (!initiator && incomingSignal) {
-            peer.signal(incomingSignal);
-        }
+        // Note: signalはcreatePeer内で処理されるため、ここでは呼ばない
     }, [user, roomId, playAudio]);
 
     // WebRTC シグナリング
@@ -615,9 +617,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     console.warn(`Received ${signal.signal.type} from unknown peer: ${signal.from}`);
                 }
 
-                // 処理済みシグナルは削除 (Stale防止)
-                if (signal.to === user.uid || (signal.signal.type === 'offer' && !signal.to)) {
-                    // 自分宛て、またはブロードキャストOfferなら削除
+                // 処理済みシグナルは削除 (Stale防止・trickle対応)
+                // 自分宛てのシグナルは全て削除（相手は既に受信済み）
+                if (signal.to === user.uid) {
                     remove(snapshot.ref).catch(err => console.error('Failed to remove signal', err));
                 }
 
