@@ -573,6 +573,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 } else {
                     console.warn(`Received ${signal.signal.type} from unknown peer: ${signal.from}`);
                 }
+
+                // 処理済みシグナルは削除 (Stale防止)
+                if (signal.to === user.uid || (signal.signal.type === 'offer' && !signal.to)) {
+                    // 自分宛て、またはブロードキャストOfferなら削除
+                    remove(snapshot.ref).catch(err => console.error('Failed to remove signal', err));
+                }
+
             } catch (error) {
                 console.error('Error handling signal:', error);
             }
@@ -664,7 +671,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
             if (participantsSnapshot.exists()) {
                 const data = participantsSnapshot.val();
                 Object.keys(data).forEach((participantId) => {
-                    if (participantId !== user.uid) {
+                    // 既に接続済み（シグナル経由で接続された）ならスキップ
+                    if (participantId !== user.uid && !peersRef.current[participantId]) {
                         console.log('Joining: initiating connection to:', participantId);
                         connectToPeer(participantId, true);
                     }
