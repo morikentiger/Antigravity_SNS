@@ -304,6 +304,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
         }
 
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Chrome対策: コンテキストがサスペンドしている場合は再開を試みる
+        if (audioContext.state === 'suspended') {
+            audioContext.resume().catch(e => console.error('VAD Context Resume Failed:', e));
+        }
+
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         const source = audioContext.createMediaStreamSource(localStream);
