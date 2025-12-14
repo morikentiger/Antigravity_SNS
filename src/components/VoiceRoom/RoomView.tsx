@@ -112,6 +112,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const audioContainerRef = useRef<HTMLDivElement>(null);
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
     const vadAudioContextRef = useRef<AudioContext | null>(null);
+    const micInitializingRef = useRef(false);
 
     // YUi Voice Assist Hook
     const yuiAssist = useYuiVoiceAssist();
@@ -284,11 +285,20 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 track.enabled = shouldBeEnabled;
             }
         });
+
+        // Initialize完了判定
+        if (isSpeaker && micInitializingRef.current) {
+            micInitializingRef.current = false;
+        }
     }, [isSpeaker, isMuted, localStream]);
 
     // リスナーになったらストリームを完全停止
     useEffect(() => {
+        // マイク初期化中はクリーンアップしない (DB反映待ちの可能性があるため)
+        if (micInitializingRef.current) return;
+
         if (!isSpeaker && localStream) {
+            console.log('Stopping stream because !isSpeaker');
             stopMediaStream(localStream);
             setLocalStream(null);
             streamRef.current = null;
@@ -583,6 +593,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     }
 
                     streamRef.current = stream;
+
+                    // 初期化フラグON (DB反映までのラグでCleanupされないようにする)
+                    micInitializingRef.current = true;
 
                     console.log('Host Stream Acquired. Tracks:', stream.getAudioTracks().map(t => ({ id: t.id, enabled: t.enabled, muted: t.muted, readyState: t.readyState })));
 
