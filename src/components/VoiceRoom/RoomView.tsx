@@ -110,6 +110,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
+    const vadAudioContextRef = useRef<AudioContext | null>(null);
 
     // YUi Voice Assist Hook
     const yuiAssist = useYuiVoiceAssist();
@@ -303,7 +304,14 @@ export default function RoomView({ roomId }: RoomViewProps) {
             return;
         }
 
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        let audioContext = vadAudioContextRef.current;
+        let isLocalContext = false;
+
+        // リファレンスがない、または閉じている場合は新規作成
+        if (!audioContext || audioContext.state === 'closed') {
+            audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            isLocalContext = true;
+        }
 
         // Chrome対策: コンテキストがサスペンドしている場合は再開を試みる
         if (audioContext.state === 'suspended') {
@@ -357,7 +365,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
             cancelAnimationFrame(animationId);
             analyser.disconnect();
             source.disconnect();
-            audioContext.close();
+
+            // ローカルで作成したコンテキストのみ閉じる (Refにあるものは維持)
+            if (isLocalContext && audioContext.state !== 'closed') {
+                audioContext.close();
+            }
+
             // cleanup時はOFFにする
             if (user) {
                 set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), false).catch(() => { });
@@ -535,6 +548,17 @@ export default function RoomView({ roomId }: RoomViewProps) {
             if (isHost) {
                 try {
                     const stream = await getUserMedia();
+
+                    // AudioContextをジェスチャー内で初期化 (Chrome対策)
+                    try {
+                        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                        const ctx = new AudioContextClass();
+                        await ctx.resume();
+                        vadAudioContextRef.current = ctx;
+                    } catch (e) {
+                        console.error('Host VAD context init failed', e);
+                    }
+
                     streamRef.current = stream;
                     setLocalStream(stream);
                     yuiAssist.startListening(stream);
@@ -601,6 +625,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
         if (streamRef.current) {
             stopMediaStream(streamRef.current);
             streamRef.current = null;
+        }
+
+        // VADコンテキストのクリーンアップ
+        if (vadAudioContextRef.current) {
+            vadAudioContextRef.current.close().catch(() => { });
+            vadAudioContextRef.current = null;
         }
 
         Object.values(peersRef.current).forEach((peer) => {
@@ -763,6 +793,17 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 const stream = await getUserMedia();
                 streamRef.current = stream;
                 setLocalStream(stream);
+
+                // AudioContextをジェスチャー内で初期化 (Chrome対策)
+                try {
+                    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                    const ctx = new AudioContextClass();
+                    await ctx.resume();
+                    vadAudioContextRef.current = ctx;
+                } catch (e) {
+                    console.error('VAD context init failed', e);
+                }
+
                 yuiAssist.startListening(stream);
 
                 // 既存のピアにストリームを追加
