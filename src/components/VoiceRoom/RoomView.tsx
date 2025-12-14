@@ -39,6 +39,57 @@ interface RoomViewProps {
     roomId: string;
 }
 
+// きらきら効果音とTTS再生
+const playJoinEffect = (userName: string) => {
+    try {
+        // SE
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new AudioContext();
+
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+
+        const now = ctx.currentTime;
+
+        // Layer 1
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.4);
+        gain1.gain.setValueAtTime(0.1, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+
+        // Layer 2
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1200, now + 0.1);
+        osc2.frequency.exponentialRampToValueAtTime(2000, now + 0.5);
+        gain2.gain.setValueAtTime(0.05, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.5);
+
+        // TTS
+        if ('speechSynthesis' in window) {
+            const uttr = new SpeechSynthesisUtterance(`${userName}さんが入室しました`);
+            uttr.lang = 'ja-JP';
+            uttr.volume = 0.8;
+            window.speechSynthesis.speak(uttr);
+        }
+    } catch (e) {
+        console.error('Join effect error:', e);
+    }
+};
+
 export default function RoomView({ roomId }: RoomViewProps) {
     const { user } = useAuth();
     const router = useRouter();
@@ -145,6 +196,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
             const comment = snapshot.val();
             if (comment) {
                 setComments(prev => [...prev, { id: snapshot.key!, ...comment }]);
+
+                // 入室通知 (Join SE & TTS)
+                // 5秒以内のイベントのみ対象（古いイベントは無視）
+                if (comment.type === 'join' && Date.now() - comment.timestamp < 5000) {
+                    playJoinEffect(comment.userName);
+                }
             }
         });
 
