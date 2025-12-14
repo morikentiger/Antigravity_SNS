@@ -62,6 +62,14 @@ export default function CommentList({
     const [floatingWelcome, setFloatingWelcome] = useState<WelcomeFloatData | null>(null);
     const [isEditingTopic, setIsEditingTopic] = useState(false);
     const [topicInput, setTopicInput] = useState(topic);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    // Auto-scroll logic
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [comments]);
 
     const formatTimestamp = (timestamp: number) => {
         const date = new Date(timestamp);
@@ -176,7 +184,7 @@ export default function CommentList({
             )}
 
             {/* コメントリスト */}
-            <div className={styles.commentsScroll}>
+            <div className={styles.commentsScroll} ref={scrollRef}>
                 {comments.map((comment) => (
                     <div key={comment.id} className={styles.commentItem}>
                         {comment.type === 'join' ? (

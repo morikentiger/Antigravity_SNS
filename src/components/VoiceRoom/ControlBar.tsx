@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Avatar from '@/components/common/Avatar';
 import styles from './ControlBar.module.css';
 
@@ -95,12 +95,22 @@ export default function ControlBar({
     const [showGameMenu, setShowGameMenu] = useState(false);
     const [showYuiModal, setShowYuiModal] = useState(false);
     const [showMicRequestList, setShowMicRequestList] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Auto focus when expanded
+    useEffect(() => {
+        if (isMessageExpanded) {
+            setTimeout(() => inputRef.current?.focus(), 100);
+        }
+    }, [isMessageExpanded]);
 
     const handleSendMessage = () => {
         if (messageInput.trim()) {
             onSendMessage(messageInput.trim());
             setMessageInput('');
-            setIsMessageExpanded(false);
+            // 送信後も入力欄を維持し、フォーカスを戻す
+            // setIsMessageExpanded(false); // Removed to keep open
+            setTimeout(() => inputRef.current?.focus(), 0);
         }
     };
 
@@ -159,6 +169,7 @@ export default function ControlBar({
                 {isMessageExpanded ? (
                     <div className={styles.messageInputArea}>
                         <input
+                            ref={inputRef}
                             type="text"
                             className={styles.messageInput}
                             value={messageInput}

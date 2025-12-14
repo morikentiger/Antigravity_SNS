@@ -476,6 +476,12 @@ export default function RoomView({ roomId }: RoomViewProps) {
         }
 
         console.log(`Creating peer connection to ${peerId}. Initiator: ${initiator}`);
+        if (streamRef.current) {
+            const tracks = streamRef.current.getAudioTracks();
+            console.log(`Local Stream Tracks for ${peerId}:`, tracks.map(t => ({ id: t.id, enabled: t.enabled, muted: t.muted, readyState: t.readyState })));
+        } else {
+            console.warn(`Creating peer for ${peerId} WITHOUT local stream!`);
+        }
         const peer = createPeer(initiator, streamRef.current || undefined, incomingSignal);
 
         peer.on('signal', (signal) => {
@@ -490,6 +496,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         peer.on('stream', (remoteStream) => {
             console.log('Received stream from:', peerId);
+            const tracks = remoteStream.getAudioTracks();
+            console.log(`Remote Stream Tracks from ${peerId}:`, tracks.map(t => ({ id: t.id, enabled: t.enabled, muted: t.muted, readyState: t.readyState })));
+
+            if (tracks.length === 0) {
+                console.error(`Stream from ${peerId} has NO audio tracks!`);
+            }
+
             playAudio(peerId, remoteStream);
         });
 
@@ -570,6 +583,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     }
 
                     streamRef.current = stream;
+
+                    console.log('Host Stream Acquired. Tracks:', stream.getAudioTracks().map(t => ({ id: t.id, enabled: t.enabled, muted: t.muted, readyState: t.readyState })));
+
                     setLocalStream(stream);
                     yuiAssist.startListening(stream);
                 } catch (error) {
@@ -816,8 +832,11 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
                 yuiAssist.startListening(stream);
 
+                console.log('Guest Stream Acquired. Tracks:', stream.getAudioTracks().map(t => ({ id: t.id, enabled: t.enabled, muted: t.muted, readyState: t.readyState })));
+
                 // 既存のピアにストリームを追加
                 Object.values(peersRef.current).forEach(peer => {
+                    console.log('Adding stream to existing peer');
                     peer.addStream(stream);
                 });
             } catch (error) {
