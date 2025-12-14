@@ -113,6 +113,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
     const vadAudioContextRef = useRef<AudioContext | null>(null);
     const micInitializingRef = useRef(false);
+    // 音声再生用コンテキスト (SEと同じ経路で再生するため)
+    const playbackAudioContextRef = useRef<AudioContext | null>(null);
+    const peerAudioSourcesRef = useRef<{ [peerId: string]: MediaStreamAudioSourceNode }>({});
 
     // YUi Voice Assist Hook
     const yuiAssist = useYuiVoiceAssist();
@@ -441,7 +444,35 @@ export default function RoomView({ roomId }: RoomViewProps) {
         return () => unsubscribe();
     }, [roomId, user?.uid, isConnected]);
 
-    const playAudio = useCallback((userId: string, stream: MediaStream) => {
+    const playAudio = useCallback(async (userId: string, stream: MediaStream) => {
+        // 1. Web Audio APIでの再生 (SEと同じ確実な経路)
+        try {
+            if (!playbackAudioContextRef.current) {
+                const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+                playbackAudioContextRef.current = new Ctx();
+            }
+            const ctx = playbackAudioContextRef.current;
+
+            // SEが鳴った実績があるため、Resumeは成功しやすいはずだが念のため確認
+            if (ctx.state === 'suspended') {
+                await ctx.resume().catch(e => console.warn('AudioContext resume failed:', e));
+            }
+
+            // 既存のソースがあれば切断
+            if (peerAudioSourcesRef.current[userId]) {
+                peerAudioSourcesRef.current[userId].disconnect();
+            }
+
+            const source = ctx.createMediaStreamSource(stream);
+            source.connect(ctx.destination);
+            peerAudioSourcesRef.current[userId] = source;
+            console.log(`[WebAudio] Connected stream for ${userId} to AudioContext`);
+
+        } catch (error) {
+            console.error('[WebAudio] Setup failed:', error);
+        }
+
+        // 2. 従来のAudioタグでの再生 (ブラウザのストリーム消費ポリシー対策など)
         if (audioElementsRef.current[userId]) {
             const existingAudio = audioElementsRef.current[userId];
             if (existingAudio.srcObject !== stream) {
@@ -454,10 +485,14 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const audio = document.createElement('audio');
         audio.srcObject = stream;
         audio.autoplay = true;
-        // playsInline removed (lint fix)
+        // OutputはWebAudioで行うため、タグ側はミュートにしておく(二重再生防止 & ハウリング防止)
+        // ただし、一部ブラウザでミュートだとデータが流れない場合があるなら false にすべきだが、
+        // WebAudio経由ならミュートでもデータ取れるのが一般的。
+        // ここでは安全のため muted=true にする。もし聞こえなければ volume=0 にする戦略もある。
+        audio.muted = true;
         audio.volume = 1.0;
+        audio.setAttribute('playsinline', 'true');
 
-        // DOMに追加して再生の安定性を向上
         if (audioContainerRef.current) {
             audioContainerRef.current.appendChild(audio);
         }
@@ -465,8 +500,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         audioElementsRef.current[userId] = audio;
 
         audio.play().catch(err => {
-            console.error('Error playing audio:', err);
-            // 自動再生ブロック回避のためのユーザーアクション誘導等はここで検討
+            console.error('Silent audio play failed:', err);
         });
     }, []);
 
@@ -523,6 +557,13 @@ export default function RoomView({ roomId }: RoomViewProps) {
         peer.on('close', () => {
             console.log(`Connection with ${peerId} closed`);
             delete peersRef.current[peerId];
+
+            // Audio Cleanup
+            if (peerAudioSourcesRef.current[peerId]) {
+                peerAudioSourcesRef.current[peerId].disconnect();
+                delete peerAudioSourcesRef.current[peerId];
+            }
+
             if (audioElementsRef.current[peerId]) {
                 audioElementsRef.current[peerId].remove();
                 delete audioElementsRef.current[peerId];
