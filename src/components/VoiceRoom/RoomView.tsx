@@ -533,13 +533,16 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const peer = createPeer(initiator, streamRef.current || undefined, incomingSignal);
 
         peer.on('signal', (signal) => {
+            // Firebaseはundefinedを拒否するため、JSONでサニタイズ
+            const sanitizedSignal = JSON.parse(JSON.stringify(signal));
+
             const signalRef = push(ref(database, `rooms/${roomId}/signals`));
             set(signalRef, {
                 from: user.uid,
                 to: peerId,
-                signal: signal,
+                signal: sanitizedSignal,
                 timestamp: Date.now(),
-            });
+            }).catch(err => console.error('Failed to send signal:', err));
         });
 
         peer.on('stream', (remoteStream) => {
@@ -598,6 +601,14 @@ export default function RoomView({ roomId }: RoomViewProps) {
                     const existingPeer = peersRef.current[signal.from];
 
                     if (existingPeer) {
+                        // 接続が既に確立済みまたは接続中なら、Glare処理しない
+                        // @ts-ignore - simple-peer internal state
+                        const isConnected = existingPeer.connected || existingPeer._pc?.connectionState === 'connected';
+                        if (isConnected) {
+                            console.log(`[Glare] Connection with ${signal.from} already established. Ignoring stale offer.`);
+                            return;
+                        }
+
                         // GLARE (同時接続) 解決ロジック: IDの辞書順で判定
                         // 自分のIDの方が小さい場合 -> 相手のOfferを優先（自分の接続試行を破棄して再作成）
                         if (user.uid < signal.from) {
