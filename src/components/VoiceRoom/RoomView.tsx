@@ -32,6 +32,7 @@ interface ParticipantData {
     avatar: string;
     muted: boolean;
     isSpeaker: boolean;
+    isSpeaking?: boolean;
 }
 
 interface RoomViewProps {
@@ -55,6 +56,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [welcomeEvent, setWelcomeEvent] = useState<WelcomeEvent | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
@@ -182,6 +184,65 @@ export default function RoomView({ roomId }: RoomViewProps) {
             unsubscribeWelcome();
         };
     }, [roomId, user, isConnected]);
+
+    // VAD (Voice Activity Detection) - 音声検知
+    useEffect(() => {
+        if (!localStream || !user) return;
+
+        // ミュート時はSpeaking状態をOFFにする
+        if (isMuted) {
+            set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), false);
+            return;
+        }
+
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        const source = audioContext.createMediaStreamSource(localStream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        let animationId: number;
+        let lastSpeakTime = 0;
+        let isSpeakingState = false;
+
+        const update = () => {
+            analyser.getByteFrequencyData(dataArray);
+            const sum = dataArray.reduce((a, b) => a + b, 0);
+            const average = sum / dataArray.length;
+
+            // 閾値: 環境によるが10-20程度で調整
+            const isNowSpeaking = average > 10;
+
+            if (isNowSpeaking) {
+                lastSpeakTime = Date.now();
+                if (!isSpeakingState) {
+                    isSpeakingState = true;
+                    set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), true);
+                }
+            } else {
+                // 保持時間 300ms (短すぎると点滅するので)
+                if (isSpeakingState && Date.now() - lastSpeakTime > 300) {
+                    isSpeakingState = false;
+                    set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), false);
+                }
+            }
+            animationId = requestAnimationFrame(update);
+        };
+
+        update();
+
+        return () => {
+            cancelAnimationFrame(animationId);
+            analyser.disconnect();
+            source.disconnect();
+            audioContext.close();
+            // cleanup時はOFFにする
+            if (user) {
+                set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), false).catch(() => { });
+            }
+        };
+    }, [localStream, isMuted, roomId, user]);
 
     // マイク申請の監視（ホストのみ）
     useEffect(() => {
@@ -351,6 +412,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         try {
             const stream = await getUserMedia();
             streamRef.current = stream;
+            setLocalStream(stream);
             setIsConnected(true);
 
             yuiAssist.startListening(stream);
@@ -674,7 +736,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
             name: p.name,
             avatar: p.avatar,
             muted: p.muted,
-            isSpeaking: false, // 実際の音声検知が必要な場合はFirebase経由で同期
+            isSpeaking: p.isSpeaking || false, // Firebase同期されたVAD状態を使用
             isHost: p.id === roomData?.hostId,
             hasYui: true, // TODO: YUi割り当てロジック
         }));
