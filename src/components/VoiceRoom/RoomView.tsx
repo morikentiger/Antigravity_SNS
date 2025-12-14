@@ -454,7 +454,18 @@ export default function RoomView({ roomId }: RoomViewProps) {
         if (!user) return;
 
         try {
-            // マイク取得はここでは行わない（リスナーとして参加）
+            // ホストの場合は最初からマイクを取得
+            if (isHost) {
+                try {
+                    const stream = await getUserMedia();
+                    streamRef.current = stream;
+                    setLocalStream(stream);
+                    yuiAssist.startListening(stream);
+                } catch (error) {
+                    console.error('Host mic error:', error);
+                }
+            }
+
             setIsConnected(true);
 
             // 自分の参加情報を登録
@@ -463,7 +474,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
                 name: user.displayName || 'Anonymous',
                 avatar: user.photoURL || '',
                 muted: false,
-                isSpeaker: false, // デフォルトはリスナー
+                isSpeaker: isHost, // ホストは最初からスピーカー
             });
 
             // 入室通知コメントを追加
