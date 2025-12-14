@@ -185,12 +185,56 @@ export default function RoomView({ roomId }: RoomViewProps) {
         };
     }, [roomId, user, isConnected]);
 
+    // Wake Lock (画面の常時点灯)
+    useEffect(() => {
+        let wakeLock: any = null;
+
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await (navigator as any).wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.error('Wake Lock failed:', err);
+            }
+        };
+
+        requestWakeLock();
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            if (wakeLock) wakeLock.release();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
+    // マイクの制御 (権限 + ミュート)
+    useEffect(() => {
+        if (!streamRef.current) return;
+
+        const audioTracks = streamRef.current.getAudioTracks();
+        const shouldBeEnabled = isSpeaker && !isMuted;
+
+        audioTracks.forEach(track => {
+            if (track.enabled !== shouldBeEnabled) {
+                track.enabled = shouldBeEnabled;
+            }
+        });
+    }, [isSpeaker, isMuted, localStream]); // streamRef.current depends on localStream updates
+
     // VAD (Voice Activity Detection) - 音声検知
     useEffect(() => {
         if (!localStream || !user) return;
 
-        // ミュート時はSpeaking状態をOFFにする
-        if (isMuted) {
+        // ミュートまたはスピーカー権限がない時はSpeaking状態をOFFにする
+        if (!isSpeaker || isMuted) {
             set(ref(database, `rooms/${roomId}/participants/${user.uid}/isSpeaking`), false);
             return;
         }
@@ -318,7 +362,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
     // ピア接続の管理
     const connectToPeer = useCallback((peerId: string, initiator: boolean = true, incomingSignal?: any) => {
-        if (!streamRef.current || !user) return;
+        if (!user) return; // streamRef check removed
 
         if (peersRef.current[peerId] && !incomingSignal) {
             console.log('Already connected to:', peerId);
@@ -332,7 +376,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
         }
 
         console.log(`Creating peer connection to ${peerId}. Initiator: ${initiator}`);
-        const peer = createPeer(initiator, streamRef.current);
+        const peer = createPeer(initiator, streamRef.current || undefined, incomingSignal);
 
         peer.on('signal', (signal) => {
             const signalRef = push(ref(database, `rooms/${roomId}/signals`));
@@ -410,12 +454,8 @@ export default function RoomView({ roomId }: RoomViewProps) {
         if (!user) return;
 
         try {
-            const stream = await getUserMedia();
-            streamRef.current = stream;
-            setLocalStream(stream);
+            // マイク取得はここでは行わない（リスナーとして参加）
             setIsConnected(true);
-
-            yuiAssist.startListening(stream);
 
             // 自分の参加情報を登録
             const userRef = ref(database, `rooms/${roomId}/participants/${user.uid}`);
@@ -625,6 +665,28 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
     const handleRequestMic = async () => {
         if (!user) return;
+
+        // マイク権限のリクエストとストリーム取得
+        if (!localStream) {
+            const confirmed = window.confirm('発言するためにマイクの使用を許可しますか？');
+            if (!confirmed) return;
+
+            try {
+                const stream = await getUserMedia();
+                streamRef.current = stream;
+                setLocalStream(stream);
+                yuiAssist.startListening(stream);
+
+                // 既存のピアにストリームを追加
+                Object.values(peersRef.current).forEach(peer => {
+                    peer.addStream(stream);
+                });
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('マイクへのアクセスが拒否されました');
+                return;
+            }
+        }
 
         const requestRef = ref(database, `rooms/${roomId}/micRequests/${user.uid}`);
         await set(requestRef, {

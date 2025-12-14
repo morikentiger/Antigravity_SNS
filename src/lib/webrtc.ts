@@ -8,7 +8,7 @@ export interface PeerConnection {
 
 export const createPeer = (
     initiator: boolean,
-    stream: MediaStream,
+    stream?: MediaStream,
     signalData?: SignalData
 ): Peer.Instance => {
     const peer = new Peer({
