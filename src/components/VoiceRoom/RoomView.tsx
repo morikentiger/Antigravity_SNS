@@ -109,6 +109,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const peersRef = useRef<{ [key: string]: Peer.Instance }>({});
     const audioElementsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+    const audioContainerRef = useRef<HTMLDivElement>(null);
     const otherYuiTtsRef = useRef<SpeechSynthesisService | null>(null);
     const vadAudioContextRef = useRef<AudioContext | null>(null);
 
@@ -435,6 +436,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
             const existingAudio = audioElementsRef.current[userId];
             if (existingAudio.srcObject !== stream) {
                 existingAudio.srcObject = stream;
+                existingAudio.play().catch(e => console.error('Audio play retry failed:', e));
             }
             return;
         }
@@ -442,11 +444,19 @@ export default function RoomView({ roomId }: RoomViewProps) {
         const audio = document.createElement('audio');
         audio.srcObject = stream;
         audio.autoplay = true;
+        // playsInline removed (lint fix)
         audio.volume = 1.0;
+
+        // DOMに追加して再生の安定性を向上
+        if (audioContainerRef.current) {
+            audioContainerRef.current.appendChild(audio);
+        }
+
         audioElementsRef.current[userId] = audio;
 
         audio.play().catch(err => {
             console.error('Error playing audio:', err);
+            // 自動再生ブロック回避のためのユーザーアクション誘導等はここで検討
         });
     }, []);
 
@@ -640,7 +650,7 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
         Object.values(audioElementsRef.current).forEach((audio) => {
             audio.srcObject = null;
-            audio.remove();
+            audio.remove(); // DOMから削除
         });
         audioElementsRef.current = {};
 
@@ -992,6 +1002,9 @@ export default function RoomView({ roomId }: RoomViewProps) {
 
     return (
         <div className={styles.room}>
+            {/* Audio Container (Hidden) */}
+            <div ref={audioContainerRef} style={{ display: 'none' }} />
+
             {/* ヘッダー */}
             <RoomHeader
                 title={roomData?.title || '音声ルーム'}
