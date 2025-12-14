@@ -635,23 +635,40 @@
 @media (max-width: 768px) {
     .controlBar {
         padding: var(--space-xs) var(--space-sm);
+        gap: var(--space-xs);
+    }
+
+    .inputRow {
+        gap: var(--space-xs);
+    }
+
+    .actionButtons {
+        gap: 4px;
     }
 
     .actionButton {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
+        width: 34px;
+        height: 34px;
+        font-size: 0.9rem;
     }
 
     .micButton {
-        width: 44px;
-        height: 44px;
-        font-size: 1.2rem;
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
     }
 
     .messageToggle {
         font-size: 0.8rem;
         padding: var(--space-xs) var(--space-sm);
+    }
+
+    .messageInputArea {
+        padding: 6px 10px;
+    }
+
+    .messageInput {
+        font-size: 0.85rem;
     }
 
     .requestMicButton {
@@ -665,14 +682,34 @@
     }
 
     .yuiButton {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+
+    .yuiButtonSmall {
         width: 32px;
         height: 32px;
         font-size: 1rem;
     }
 
-    .yuiButtonSmall {
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
+    .stepDownButton {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+    }
+
+    .micControls {
+        gap: 4px;
+    }
+
+    .sendButton {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .imageButton {
+        font-size: 0.9rem;
+        padding: 4px;
     }
 }
