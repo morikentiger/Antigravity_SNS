@@ -547,11 +547,31 @@ export default function RoomView({ roomId }: RoomViewProps) {
             if (signal.to && signal.to !== user.uid) return;
 
             try {
-                if (peersRef.current[signal.from]) {
+                if (signal.signal.type === 'offer') {
+                    const existingPeer = peersRef.current[signal.from];
+
+                    if (existingPeer) {
+                        // GLARE (同時接続) 解決ロジック: IDの辞書順で判定
+                        // 自分のIDの方が小さい場合 -> 相手のOfferを優先（自分の接続試行を破棄して再作成）
+                        if (user.uid < signal.from) {
+                            console.log(`[Glare] Yielding connection to ${signal.from} (My ID < Peer ID). Re-connecting as responder.`);
+                            existingPeer.destroy();
+                            delete peersRef.current[signal.from];
+                            connectToPeer(signal.from, false, signal.signal);
+                        } else {
+                            console.log(`[Glare] Ignoring offer from ${signal.from} (My ID > Peer ID). Waiting for them to yield.`);
+                            // 相手側でYield処理が走り、こちらのOfferを受けてくれるのを待つ
+                        }
+                    } else {
+                        // 通常の着信
+                        console.log('Received offer from:', signal.from);
+                        connectToPeer(signal.from, false, signal.signal);
+                    }
+                } else if (peersRef.current[signal.from]) {
+                    // Answer, Candidate 等の処理
                     peersRef.current[signal.from].signal(signal.signal);
-                } else if (signal.signal.type === 'offer') {
-                    console.log('Received offer from:', signal.from);
-                    connectToPeer(signal.from, false, signal.signal);
+                } else {
+                    console.warn(`Received ${signal.signal.type} from unknown peer: ${signal.from}`);
                 }
             } catch (error) {
                 console.error('Error handling signal:', error);
