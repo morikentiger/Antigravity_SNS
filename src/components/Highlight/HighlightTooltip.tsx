@@ -132,6 +132,7 @@ const HighlightTooltip = forwardRef<HTMLDivElement, HighlightTooltipProps>(({
                     : 'translate(-50%, 0)',
             }}
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
         >
             {mode === 'create' ? (
                 <button className={styles.createButton} onClick={() => {

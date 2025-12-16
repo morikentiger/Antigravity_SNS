@@ -212,12 +212,22 @@ export default function TextHighlighter({ children, threadId, replyId, className
     // ドキュメントクリックでツールチップを閉じる
     useEffect(() => {
         const handleDocumentClick = (e: MouseEvent) => {
+            console.log('mousedown detected', {
+                target: e.target,
+                tooltipRef: tooltipRef.current,
+                containerRef: containerRef.current,
+                tooltipContains: tooltipRef.current?.contains(e.target as Node),
+                containerContains: containerRef.current?.contains(e.target as Node),
+            });
+
             // ツールチップ内のクリックは除外
             if (tooltipRef.current && tooltipRef.current.contains(e.target as Node)) {
+                console.log('Click inside tooltip, NOT closing');
                 return;
             }
             // コンテナ外のクリックで閉じる
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                console.log('Click outside container, closing');
                 handleClose();
             }
         };
