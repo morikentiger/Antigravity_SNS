@@ -135,10 +135,7 @@ const HighlightTooltip = forwardRef<HTMLDivElement, HighlightTooltipProps>(({
             onMouseDown={(e) => e.stopPropagation()}
         >
             {mode === 'create' ? (
-                <button className={styles.createButton} onClick={() => {
-                    console.log('Highlight button clicked, onHighlight:', onHighlight);
-                    if (onHighlight) onHighlight();
-                }}>
+                <button className={styles.createButton} onClick={onHighlight}>
                     <span className={styles.icon}>✨</span>
                     <span>ハイライト</span>
                 </button>
