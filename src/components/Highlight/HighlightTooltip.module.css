@@ -6,9 +6,6 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
     padding: var(--space-xs);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
     animation: fadeIn 0.15s ease;
 }
 
@@ -49,6 +46,13 @@
     font-size: 1rem;
 }
 
+.actionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    min-width: 200px;
+}
+
 .actions {
     display: flex;
     align-items: center;
@@ -77,6 +81,11 @@
     color: var(--color-accent);
 }
 
+.actionButton.active {
+    background: var(--glass-bg);
+    color: var(--color-primary);
+}
+
 .actionButton.liked svg {
     animation: heartPulse 0.3s ease;
 }
@@ -98,6 +107,29 @@
     font-weight: 600;
 }
 
+/* いいねしたユーザーアイコン */
+.likerAvatars {
+    display: flex;
+    align-items: center;
+    margin-left: var(--space-xs);
+}
+
+.likerAvatar {
+    margin-left: -6px;
+    border: 2px solid var(--color-bg-secondary);
+    border-radius: 50%;
+}
+
+.likerAvatar:first-child {
+    margin-left: 0;
+}
+
+.moreCount {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-left: var(--space-xs);
+}
+
 .closeButton {
     display: flex;
     align-items: center;
@@ -105,6 +137,7 @@
     width: 24px;
     height: 24px;
     padding: 0;
+    margin-left: auto;
     background: transparent;
     border: none;
     border-radius: 50%;
@@ -120,6 +153,92 @@
     color: var(--color-text-primary);
 }
 
+/* コメントセクション */
+.commentsSection {
+    border-top: 1px solid var(--glass-border);
+    padding-top: var(--space-sm);
+    max-width: 280px;
+}
+
+.commentsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: var(--space-sm);
+}
+
+.commentItem {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: flex-start;
+}
+
+.commentContent {
+    flex: 1;
+    min-width: 0;
+}
+
+.commentAuthor {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-right: var(--space-xs);
+}
+
+.commentText {
+    font-size: 0.8rem;
+    color: var(--color-text-primary);
+    word-break: break-word;
+}
+
+.commentInput {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+}
+
+.input {
+    flex: 1;
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 0.8rem;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.submitButton {
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+    background: var(--color-secondary);
+}
+
+.submitButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* レスポンシブ */
 @media (max-width: 768px) {
     .createButton {
@@ -129,5 +248,9 @@
 
     .actionButton {
         padding: var(--space-xs);
+    }
+
+    .commentsSection {
+        max-width: 220px;
     }
 }

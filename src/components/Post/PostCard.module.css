@@ -168,6 +168,13 @@
     text-decoration: underline;
 }
 
+.likeCount {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs);
+}
+
 /* Simple Image Badge */
 .imageBadge {
     display: flex;

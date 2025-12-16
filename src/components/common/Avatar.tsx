@@ -4,7 +4,7 @@ import styles from './Avatar.module.css';
 interface AvatarProps {
     src?: string;
     alt: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'xs' | 'sm' | 'md' | 'lg';
     online?: boolean;
 }
 

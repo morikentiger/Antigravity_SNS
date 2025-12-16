@@ -282,8 +282,9 @@ export default function TextHighlighter({ children, threadId, replyId, className
                     mode="actions"
                     highlight={activeHighlight}
                     isLiked={!!activeHighlight.likedBy?.[user.uid]}
+                    threadId={threadId}
+                    replyId={replyId}
                     onLike={handleLikeHighlight}
-                    onComment={() => {/* TODO: コメントモーダル */ }}
                     onClose={handleClose}
                 />
             )}
