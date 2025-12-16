@@ -145,6 +145,29 @@
     color: var(--color-text-primary);
 }
 
+/* Like Wrapper for popup positioning */
+.likeWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.likeCountButton {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all var(--transition-base);
+}
+
+.likeCountButton:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+}
+
 /* Simple Image Badge */
 .imageBadge {
     display: flex;

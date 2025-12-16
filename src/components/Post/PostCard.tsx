@@ -6,6 +6,7 @@ import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/common/Avatar';
+import LikersPopup from '@/components/common/LikersPopup';
 import { Linkify } from '@/components/common/Linkify';
 import { calculateUserDataFromPost } from '@/lib/sentiment';
 import styles from './PostCard.module.css';
@@ -35,6 +36,9 @@ export default function PostCard({ post }: PostCardProps) {
         user ? post.likedBy?.[user.uid] || false : false
     );
     const [likeCount, setLikeCount] = useState(post.likes || 0);
+    const [showLikers, setShowLikers] = useState(false);
+    const [currentLikedBy, setCurrentLikedBy] = useState(post.likedBy);
+    const likeButtonRef = useRef<HTMLButtonElement>(null);
 
     // 最新のプロフィール情報を取得
     const [currentUserName, setCurrentUserName] = useState(post.userName);
@@ -89,6 +93,9 @@ export default function PostCard({ post }: PostCardProps) {
                 likes: newLikeCount,
                 likedBy: updatedLikedBy,
             });
+
+            // ローカル状態も更新
+            setCurrentLikedBy(updatedLikedBy);
         } catch (error) {
             console.error('Error liking post:', error);
             setIsLiked(!newLikedState);
@@ -369,16 +376,34 @@ export default function PostCard({ post }: PostCardProps) {
             </div>
 
             <div className={styles.actions}>
-                <button
-                    onClick={handleLike}
-                    className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
-                    aria-label="いいね"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
-                    <span>{likeCount}</span>
-                </button>
+                <div className={styles.likeWrapper}>
+                    <button
+                        ref={likeButtonRef}
+                        onClick={handleLike}
+                        className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
+                        aria-label="いいね"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (likeCount > 0) setShowLikers(!showLikers);
+                        }}
+                        className={styles.likeCountButton}
+                        aria-label="いいねした人を見る"
+                    >
+                        <span>{likeCount}</span>
+                    </button>
+                    <LikersPopup
+                        likedBy={currentLikedBy}
+                        isOpen={showLikers}
+                        onClose={() => setShowLikers(false)}
+                        anchorRef={likeButtonRef as React.RefObject<HTMLElement>}
+                    />
+                </div>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();

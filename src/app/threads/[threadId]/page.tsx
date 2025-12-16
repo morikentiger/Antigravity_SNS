@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ref, onValue, push, serverTimestamp, get, set, remove } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import UserProfilePopup from '@/components/common/UserProfilePopup';
+import LikersPopup from '@/components/common/LikersPopup';
 import Button from '@/components/common/Button';
 import { Linkify } from '@/components/common/Linkify';
+import TextHighlighter from '@/components/Highlight/TextHighlighter';
 
 import styles from './page.module.css';
 
@@ -360,9 +362,11 @@ export default function ThreadDetailPage() {
                             <p className={styles.timestamp}>{formatTime(thread.timestamp)}</p>
                         </div>
                     </div>
-                    <p className={styles.threadContent}>
-                        <Linkify>{thread.content}</Linkify>
-                    </p>
+                    <div className={styles.threadContent}>
+                        <TextHighlighter threadId={threadId} className={styles.highlightableContent}>
+                            {thread.content}
+                        </TextHighlighter>
+                    </div>
 
                     {/* Display image if available */}
                     {thread.imageUrl && (
@@ -430,9 +434,15 @@ export default function ThreadDetailPage() {
                                         </button>
                                     )}
                             </div>
-                            <p className={styles.replyContent}>
-                                <Linkify>{reply.content}</Linkify>
-                            </p>
+                            <div className={styles.replyContent}>
+                                <TextHighlighter
+                                    threadId={threadId}
+                                    replyId={reply.id}
+                                    className={styles.highlightableContent}
+                                >
+                                    {reply.content}
+                                </TextHighlighter>
+                            </div>
                             {/* YUi返信ボタン（自分のYUi返信以外に表示） */}
                             {user && !(reply.authorType === 'yui' && reply.masterUserId === user.uid) && (
                                 <button

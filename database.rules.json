@@ -43,6 +43,28 @@
         "siteStats": {
             ".read": true,
             ".write": true
+        },
+        "highlights": {
+            ".read": true,
+            "$threadId": {
+                ".write": "auth != null",
+                "main": {
+                    "$highlightId": {
+                        ".indexOn": [
+                            "timestamp"
+                        ]
+                    }
+                },
+                "replies": {
+                    "$replyId": {
+                        "$highlightId": {
+                            ".indexOn": [
+                                "timestamp"
+                            ]
+                        }
+                    }
+                }
+            }
         }
     }
 }
