@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { ref, get, push, serverTimestamp } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
@@ -25,7 +25,7 @@ interface HighlightTooltipProps {
     onClose: () => void;
 }
 
-export default function HighlightTooltip({
+const HighlightTooltip = forwardRef<HTMLDivElement, HighlightTooltipProps>(({
     position,
     mode,
     highlight,
@@ -35,7 +35,7 @@ export default function HighlightTooltip({
     onHighlight,
     onLike,
     onClose,
-}: HighlightTooltipProps) {
+}, forwardedRef) => {
     const { user } = useAuth();
     const [showCommentInput, setShowCommentInput] = useState(false);
     const [commentText, setCommentText] = useState('');
@@ -122,6 +122,7 @@ export default function HighlightTooltip({
 
     return (
         <div
+            ref={forwardedRef}
             className={styles.tooltip}
             style={{
                 left: `${position.x}px`,
@@ -133,7 +134,10 @@ export default function HighlightTooltip({
             onClick={(e) => e.stopPropagation()}
         >
             {mode === 'create' ? (
-                <button className={styles.createButton} onClick={onHighlight}>
+                <button className={styles.createButton} onClick={() => {
+                    console.log('Highlight button clicked, onHighlight:', onHighlight);
+                    if (onHighlight) onHighlight();
+                }}>
                     <span className={styles.icon}>✨</span>
                     <span>ハイライト</span>
                 </button>
@@ -237,4 +241,8 @@ export default function HighlightTooltip({
             )}
         </div>
     );
-}
+});
+
+HighlightTooltip.displayName = 'HighlightTooltip';
+
+export default HighlightTooltip;

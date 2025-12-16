@@ -40,6 +40,7 @@ interface TextHighlighterProps {
 export default function TextHighlighter({ children, threadId, replyId, className }: TextHighlighterProps) {
     const { user } = useAuth();
     const containerRef = useRef<HTMLDivElement>(null);
+    const tooltipRef = useRef<HTMLDivElement>(null);
     const [highlights, setHighlights] = useState<Highlight[]>([]);
     const [selectedText, setSelectedText] = useState<{
         text: string;
@@ -133,9 +134,14 @@ export default function TextHighlighter({ children, threadId, replyId, className
 
     // 新規ハイライト作成
     const handleCreateHighlight = useCallback(async () => {
-        if (!user || !selectedText) return;
+        console.log('handleCreateHighlight called', { user, selectedText });
+        if (!user || !selectedText) {
+            console.log('Early return: user or selectedText missing');
+            return;
+        }
 
         try {
+            console.log('Creating highlight...', { threadId, replyId });
             const userDbRef = ref(database, `users/${user.uid}`);
             const userSnapshot = await get(userDbRef);
             const userData = userSnapshot.val();
@@ -206,6 +212,11 @@ export default function TextHighlighter({ children, threadId, replyId, className
     // ドキュメントクリックでツールチップを閉じる
     useEffect(() => {
         const handleDocumentClick = (e: MouseEvent) => {
+            // ツールチップ内のクリックは除外
+            if (tooltipRef.current && tooltipRef.current.contains(e.target as Node)) {
+                return;
+            }
+            // コンテナ外のクリックで閉じる
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 handleClose();
             }
@@ -268,6 +279,7 @@ export default function TextHighlighter({ children, threadId, replyId, className
             {/* 新規ハイライト作成ツールチップ */}
             {selectedText && user && (
                 <HighlightTooltip
+                    ref={tooltipRef}
                     position={selectedText.position}
                     mode="create"
                     onHighlight={handleCreateHighlight}
@@ -278,6 +290,7 @@ export default function TextHighlighter({ children, threadId, replyId, className
             {/* 既存ハイライトのアクションツールチップ */}
             {showHighlightActions && activeHighlight && user && (
                 <HighlightTooltip
+                    ref={tooltipRef}
                     position={highlightActionsPosition}
                     mode="actions"
                     highlight={activeHighlight}
